@@ -32,6 +32,7 @@ interface Food {
   description: string
   discount?: string
   options?: AdditionalOption[]
+
   restaurantName?: string
   restaurantImage?: any
 }

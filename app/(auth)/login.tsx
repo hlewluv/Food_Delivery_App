@@ -39,6 +39,7 @@ const Login = () => {
       console.log('Login successful:', user);
       router.push('/customer/(tabs)/home', user);
 
+
     } catch (error: any) {
       setErrorMessage(error.message);
       setShowErrorModal(true);

@@ -2,16 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Feather, MaterialIcons, Ionicons } from '@expo/vector-icons';
 
-const DeliveryAddress = ({ 
-  initialAddress = {
-    street: '',
-    ward: '',
-    district: '',
-    city: '',
-  }, 
-  onAddressChange = (address: { street: string; ward: string; district: string; city: string; }) => {}, 
-  onDeliveryInstructionsChange = (text: any) => {} 
-}) => {
+
+const DeliveryAddress = ({ initialAddress, onAddressChange, onDeliveryInstructionsChange }) => {
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [address, setAddress] = useState(initialAddress);
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
@@ -21,7 +13,8 @@ const DeliveryAddress = ({
     onAddressChange(address);
   };
 
-  const handleDeliveryInstructionsChange = (text: React.SetStateAction<string>) => {
+
+  const handleDeliveryInstructionsChange = (text) => {
     setDeliveryInstructions(text);
     onDeliveryInstructionsChange(text);
   };
@@ -100,4 +93,16 @@ const DeliveryAddress = ({
   );
 };
 
+
+// Prop types để validate props (nếu sử dụng TypeScript hoặc PropTypes)
+DeliveryAddress.defaultProps = {
+  initialAddress: {
+    street: '',
+    ward: '',
+    district: '',
+    city: '',
+  },
+  onAddressChange: () => {},
+  onDeliveryInstructionsChange: () => {},
+};
 export default DeliveryAddress;

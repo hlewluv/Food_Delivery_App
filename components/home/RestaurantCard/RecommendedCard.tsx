@@ -43,6 +43,7 @@ const RecommendedCard: React.FC<RecommendedCardProps> = ({ item, isLiked, onTogg
   const handlePress = () => {
     router.push({
       pathname: `/customer/restaurants/[id]`,  // Use the exact route pattern
+
       params: {
         id: item.id,  // Pass the id separately
         restaurant: JSON.stringify({

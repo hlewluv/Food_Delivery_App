@@ -16,6 +16,7 @@ const PaymentMethod = ({ onPaymentMethodChange = (methodId: any) => {}, appliedO
       id: 'zalopay',
       name: 'Zalopay ***9479',
       icon: <FontAwesome name='credit-card' size={19} color='#00b14f' />
+
     },
     {
       id: 'cash',
@@ -24,7 +25,7 @@ const PaymentMethod = ({ onPaymentMethodChange = (methodId: any) => {}, appliedO
     }
   ]
 
-  const handleSelectMethod = methodId => {
+  const handleSelectMethod = (methodId: React.SetStateAction<string>) => {
     setSelectedMethod(methodId)
     onPaymentMethodChange(methodId)
   }
@@ -53,6 +54,7 @@ const PaymentMethod = ({ onPaymentMethodChange = (methodId: any) => {}, appliedO
               </View>
               {method.icon}
               <Text className='ml-2 text-base font-medium text-gray-700'>{method.name}</Text>
+
             </View>
           </TouchableOpacity>
         ))}
@@ -76,6 +78,7 @@ const PaymentMethod = ({ onPaymentMethodChange = (methodId: any) => {}, appliedO
           <View className='flex-row items-center'>
             <Text className='text-sm font-medium text-green-500 mr-1'>Xem tất cả</Text>
             <Feather name='chevron-right' size={16} color='#00b14f' />
+
           </View>
         </TouchableOpacity>
       </View>

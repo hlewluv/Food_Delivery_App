@@ -122,6 +122,7 @@ const CartScreen = () => {
 
   return (
     <ScrollView className='flex-1 bg-white'>
+
       {/* Header */}
       <View className='bg-white px-5 py-4'>
         <Text className='text-[20px] font-bold'>Tóm tắt đơn hàng</Text>

@@ -63,7 +63,7 @@ const RestaurantDetail: React.FC = () => {
 
   const handleFoodPress = (foodItem: MenuItem) => {
     router.push({
-      pathname: `/customer/foodDetail/${foodItem.id}`,
+      pathname: `/customer/foodDetail/[id]`,
       params: {
         food: JSON.stringify({
           ...foodItem,
@@ -113,6 +113,7 @@ const RestaurantDetail: React.FC = () => {
     
     router.push({
       pathname: '/customer/cart',
+
       params: {
         cart: JSON.stringify(cartItems),
         restaurant: JSON.stringify(restaurantData)
@@ -249,6 +250,7 @@ const RestaurantDetail: React.FC = () => {
                       }}
                       onPress={() => handleFoodPress(item)}
                       onAddToCart={(quantity: number) => handleAddToCart(item, quantity)}
+
                       quantity={cartItems.find(cartItem => cartItem.item.id === item.id)?.quantity || 0}
                     />
                   </View>
@@ -280,6 +282,7 @@ const RestaurantDetail: React.FC = () => {
                   onPress={() => handleFoodPress(item)}
                   onAddToCart={(quantity: number) => handleAddToCart(item, quantity)}
                   quantity={cartItems.find(cartItem => cartItem.item.id === item.id)?.quantity || 0} onRemoveFromCart={undefined} onUpdateQuantity={undefined}                />
+
               ))}
             </View>
           ))}

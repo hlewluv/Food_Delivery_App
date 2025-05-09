@@ -28,6 +28,12 @@ const HomeScreen = () => {
   //     console.log('Received user:', token);
   //   }
   // }, [token]);
+  useEffect(() => {
+    if (token) {
+      console.log('Received user:', token);
+      // Xử lý với user ở đây
+    }
+  }, [token]);
 
   return (
     <View className='flex-1 bg-white'>

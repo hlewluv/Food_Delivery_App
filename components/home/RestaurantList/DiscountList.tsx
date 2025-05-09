@@ -23,6 +23,7 @@ const DiscountList = ({ likedRestaurants, toggleLike, categoryId }: DiscountList
   const handleRestaurantPress = (item: Restaurant) => {
     router.push({
       pathname: `/customer/restaurants/[id]`,
+
       params: {
         id: item.id,
         restaurant: JSON.stringify({
