@@ -21,7 +21,7 @@ const DeliveryAddress = ({
     onAddressChange(address);
   };
 
-  const handleDeliveryInstructionsChange = (text) => {
+  const handleDeliveryInstructionsChange = (text: React.SetStateAction<string>) => {
     setDeliveryInstructions(text);
     onDeliveryInstructionsChange(text);
   };
