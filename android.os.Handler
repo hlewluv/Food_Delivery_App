@@ -1,0 +1,7 @@
+mHandler.postDelayed(new Runnable() {
+    @Override
+    public void run() {
+        // Code chạy sau 2 giây
+        updateUI();
+    }
+}, 2000);
