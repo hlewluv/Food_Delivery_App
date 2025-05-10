@@ -63,7 +63,7 @@ const Home = () => {
           </TouchableOpacity>
 
           {/* Thực đơn */}
-          <TouchableOpacity className='items-center w-1/4 mb-4'>
+          <TouchableOpacity className='items-center w-1/4 mb-4'  onPress={() => router.push('/(app)/merchant/menu/menu')}>
             <View className='bg-white p-3 rounded-full border border-gray-200 shadow-sm'>
               <Feather name='book-open' size={24} color='#3b82f6' />
               <View className='absolute -top-1 -right-1 bg-red-500 rounded-full h-5 w-5 flex items-center justify-center'>

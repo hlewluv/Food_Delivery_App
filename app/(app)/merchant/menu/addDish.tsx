@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,12 @@ import {
   Image,
   Alert,
   ActivityIndicator
-} from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
-import { Picker } from '@react-native-picker/picker'
-import * as ImagePicker from 'expo-image-picker'
-import * as FileSystem from 'expo-file-system'
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { router } from 'expo-router';
 
 const AddDishScreen = () => {
   // Hardcoded form state
@@ -23,27 +24,27 @@ const AddDishScreen = () => {
     category: 'Đặc sản', // Default category
     notes: '',
     image: null
-  })
-  const [imageSize, setImageSize] = useState(0)
-  const [isLoading, setIsLoading] = useState(false)
-  const [permissionDenied, setPermissionDenied] = useState(false)
+  });
+  const [imageSize, setImageSize] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [permissionDenied, setPermissionDenied] = useState(false);
 
   // Hardcoded category options (can be fetched from API later)
   const categories = [
     { label: 'Đặc sản', value: 'Đặc sản' },
     { label: 'Món chính', value: 'Món chính' },
     { label: 'Đồ uống', value: 'Đồ uống' }
-  ]
+  ];
 
   // Check and request permissions on component mount
   useEffect(() => {
-    ;(async () => {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    (async () => {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        setPermissionDenied(true)
+        setPermissionDenied(true);
       }
-    })()
-  }, [])
+    })();
+  }, []);
 
   // Function to handle image selection
   const pickImage = async () => {
@@ -51,53 +52,53 @@ const AddDishScreen = () => {
       Alert.alert(
         'Quyền truy cập bị từ chối',
         'Vui lòng cấp quyền truy cập thư viện ảnh trong cài đặt thiết bị'
-      )
-      return
+      );
+      return;
     }
 
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8
-      })
+      });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        const selectedImage = result.assets[0]
+        const selectedImage = result.assets[0];
 
         // Check file size
-        const fileInfo = await FileSystem.getInfoAsync(selectedImage.uri)
-        const sizeInMB = fileInfo.size / (1024 * 1024)
+        const fileInfo = await FileSystem.getInfoAsync(selectedImage.uri);
+        const sizeInMB = fileInfo.size / (1024 * 1024);
 
         if (sizeInMB > 2) {
-          Alert.alert('Lỗi', 'Kích thước ảnh không được vượt quá 2MB')
-          return
+          Alert.alert('Lỗi', 'Kích thước ảnh không được vượt quá 2MB');
+          return;
         }
 
-        setFormData({ ...formData, image: selectedImage.uri })
-        setImageSize(sizeInMB)
+        setFormData({ ...formData, image: selectedImage.uri });
+        setImageSize(sizeInMB);
       }
     } catch (error) {
-      console.error('Error picking image:', error)
-      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi chọn ảnh')
+      console.error('Error picking image:', error);
+      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi chọn ảnh');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Function to handle form submission
   const handleSubmit = () => {
     // Validation
     if (!formData.dishName.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tên món ăn')
-      return
+      Alert.alert('Lỗi', 'Vui lòng nhập tên món ăn');
+      return;
     }
 
     if (!formData.price.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập giá món ăn')
-      return
+      Alert.alert('Lỗi', 'Vui lòng nhập giá món ăn');
+      return;
     }
 
     // Structured data for API (ready to send)
@@ -108,14 +109,17 @@ const AddDishScreen = () => {
       category: formData.category,
       notes: formData.notes,
       image: formData.image
-    }
+    };
 
-    console.log('Data to send to API:', newDish)
+    console.log('Data to send to API:', newDish);
 
     Alert.alert('Thành công', 'Món ăn đã được thêm thành công', [
-      { text: 'OK', onPress: () => resetForm() }
-    ])
-  }
+      { text: 'OK', onPress: () => {
+        resetForm();
+        router.back(); // Navigate back to previous screen
+      }}
+    ]);
+  };
 
   // Reset form after submission
   const resetForm = () => {
@@ -126,15 +130,22 @@ const AddDishScreen = () => {
       category: 'Đặc sản',
       notes: '',
       image: null
-    })
-    setImageSize(0)
-  }
+    });
+    setImageSize(0);
+  };
 
   return (
     <ScrollView className='flex-1 bg-white' contentContainerStyle={{ paddingBottom: 30 }}>
+      {/* Header with Back Button */}
+      <View className="flex-row items-center p-5 bg-white border-b border-gray-200">
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <Ionicons name="arrow-back" size={28} color="gray" />
+        </TouchableOpacity>
+        <Text className="flex-1 text-center text-2xl font-semibold text-gray-800 mr-8">Thêm món ăn</Text>
+      </View>
+
       {/* Image Upload Section */}
-      {/* Image Upload Section */}
-      <View className='p-4 mx-4 my-2 bg-white rounded-lg border border-gray-200'>
+      <View className='p-4 mx-4 my-4 bg-white rounded-lg border border-gray-200'>
         <View className='flex-row'>
           {/* Left Column: Image (Centered) */}
           <View className='w-1/3 flex items-center justify-center'>
@@ -186,8 +197,8 @@ const AddDishScreen = () => {
             {formData.image && (
               <TouchableOpacity
                 onPress={() => {
-                  setFormData({ ...formData, image: null })
-                  setImageSize(0)
+                  setFormData({ ...formData, image: null });
+                  setImageSize(0);
                 }}
                 className='mt-1 flex-row items-center'>
                 <Ionicons name='trash-outline' size={14} color='red' />
@@ -203,7 +214,7 @@ const AddDishScreen = () => {
         {/* Tên món ăn */}
         <TextInput
           className='border border-gray-300 rounded-lg p-3 mb-4 text-base'
-          style={{ height: 52 }} // Set height to 52
+          style={{ height: 52 }}
           placeholder='Tên món ăn'
           value={formData.dishName}
           onChangeText={text => setFormData({ ...formData, dishName: text })}
@@ -211,7 +222,7 @@ const AddDishScreen = () => {
         {/* Mô tả */}
         <TextInput
           className='border border-gray-300 rounded-lg p-3 mb-4 text-base'
-          style={{ height: 52 }} // Set height to 52
+          style={{ height: 52 }}
           placeholder='Mô tả'
           value={formData.description}
           onChangeText={text => setFormData({ ...formData, description: text })}
@@ -220,7 +231,7 @@ const AddDishScreen = () => {
         {/* Giá */}
         <TextInput
           className='border border-gray-300 rounded-lg p-3 mb-4 text-base'
-          style={{ height: 52 }} // Set height to 52
+          style={{ height: 52 }}
           placeholder='Giá'
           value={formData.price}
           onChangeText={text => setFormData({ ...formData, price: text })}
@@ -232,12 +243,12 @@ const AddDishScreen = () => {
             selectedValue={formData.category}
             onValueChange={itemValue => setFormData({ ...formData, category: itemValue })}
             style={{
-              height: 52, // Set height to 52
+              height: 52,
               paddingHorizontal: 12,
-              fontSize: 14 // Reduce font size for selected item
+              fontSize: 14
             }}
-            itemStyle={{ fontSize: 14 }} // Reduce font size for dropdown items
-            dropdownIconColor='#6b7280' // Color of dropdown icon (gray-500)
+            itemStyle={{ fontSize: 14 }}
+            dropdownIconColor='#6b7280'
           >
             {categories.map((cat, index) => (
               <Picker.Item key={index} label={cat.label} value={cat.value} />
@@ -247,7 +258,7 @@ const AddDishScreen = () => {
         {/* Ghi chú */}
         <TextInput
           className='border border-gray-300 rounded-lg p-3 mb-4 text-base'
-          style={{ height: 52 }} // Set height to 52
+          style={{ height: 52 }}
           placeholder='Ghi chú'
           value={formData.notes}
           onChangeText={text => setFormData({ ...formData, notes: text })}
@@ -269,7 +280,7 @@ const AddDishScreen = () => {
         </TouchableOpacity>
       </View>
     </ScrollView>
-  )
-}
+  );
+};
 
-export default AddDishScreen
+export default AddDishScreen;

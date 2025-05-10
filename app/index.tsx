@@ -6,7 +6,7 @@ import { Redirect, router } from 'expo-router'
 import { MotiView } from 'moti'
 
 export default function Index() {
-  //return <Redirect href="/merchant/menu" />; // Mở thẳng vào tab home
-  return <Redirect href="/customer/(tabs)/home" />; // Mở thẳng vào tab home
+  return <Redirect href="/(app)/merchant/(tabs)/home" />; // Mở thẳng vào tab home
+  //return <Redirect href="/(app)/customer/(tabs)/home" />; // Mở thẳng vào tab home
   //return <Redirect href="/login" />
 }

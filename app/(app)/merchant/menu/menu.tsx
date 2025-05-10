@@ -8,11 +8,12 @@ import {
   Modal,
   TouchableWithoutFeedback,
   TextInput,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import * as ImagePicker from 'expo-image-picker'
-import * as FileSystem from 'expo-file-system' // Imported but not directly used in this example
+import { router } from 'expo-router'
 
 const MenuScreen = () => {
   const [selectedTab, setSelectedTab] = useState('Có sẵn')
@@ -26,13 +27,13 @@ const MenuScreen = () => {
     price: '',
     available: true,
     image:
-      'https://cdn.tgdd.vn/2021/06/CookProduct/com-la-gi-cach-bao-quan-com-tuoi-mua-com-lang-vong-o-dau-ngon-thumb-chu-nhat-1200x676.jpg' // Default fallback image
+      'https://cdn.tgdd.vn/2021/06/CookProduct/com-la-gi-cach-bao-quan-com-tuoi-mua-com-lang-vong-o-dau-ngon-thumb-chu-nhat-1200x676.jpg'
   })
 
   const [categories, setCategories] = useState([
     {
       name: 'Đặc sản/Món khó',
-      count: 3,
+      count: 1,
       dishes: [
         {
           name: 'LẬP XƯỞNG TƯƠI',
@@ -42,12 +43,11 @@ const MenuScreen = () => {
           image:
             'https://cdn.tgdd.vn/2021/06/CookProduct/com-la-gi-cach-bao-quan-com-tuoi-mua-com-lang-vong-o-dau-ngon-thumb-chu-nhat-1200x676.jpg'
         }
-        // Other dishes...
       ]
     },
     {
       name: 'Ăn Vặt',
-      count: 6,
+      count: 1,
       dishes: [
         {
           name: 'KHOAI TÂY CHIÊN',
@@ -57,21 +57,17 @@ const MenuScreen = () => {
           image:
             'https://cdn.tgdd.vn/2021/06/CookProduct/com-la-gi-cach-bao-quan-com-tuoi-mua-com-lang-vong-o-dau-ngon-thumb-chu-nhat-1200x676.jpg'
         }
-        // Other dishes...
       ]
     }
   ])
 
-  // Function to request media library permissions and pick an image
   const pickImage = async () => {
-    // Request permission to access media library
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (!permissionResult.granted) {
-      Alert.alert('Permission Denied', 'Permission to access gallery is required!')
+      Alert.alert('Quyền bị từ chối', 'Cần quyền truy cập thư viện ảnh!')
       return
     }
 
-    // Launch image picker
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -127,38 +123,22 @@ const MenuScreen = () => {
   }
 
   const addNewDish = () => {
-    setEditDishData({
-      name: '',
-      description: '',
-      price: '',
-      available: true,
-      image:
-        'https://cdn.tgdd.vn/2021/06/CookProduct/com-la-gi-cach-bao-quan-com-tuoi-mua-com-lang-vong-o-dau-ngon-thumb-chu-nhat-1200x676.jpg' // Default image
-    })
-    setSelectedDish(null)
-    setShowEditModal(true)
+    router.push('/(app)/merchant/menu/addDish')
     setShowOptions(false)
   }
-
-  const saveNewDish = () => {
-    const updatedCategories = [...categories]
-    updatedCategories[0].dishes.push({ ...editDishData })
-    updatedCategories[0].count = updatedCategories[0].dishes.length
-    setCategories(updatedCategories)
-    setShowEditModal(false)
-  }
+    const [isLoading, setIsLoading] = useState(false)
+    const [permissionDenied, setPermissionDenied] = useState(false)
+  
 
   return (
     <View className='flex-1 bg-white'>
-      {/* Header with Back Button and Centered Title */}
       <View className='flex-row items-center p-5 bg-white border-b border-gray-200'>
-        <TouchableOpacity onPress={handleBackPress} className='mr-4'>
+        <TouchableOpacity onPress={() => router.back()} className='mr-4'>
           <Ionicons name='arrow-back' size={28} color='gray' />
         </TouchableOpacity>
         <Text className='flex-1 text-center text-2xl font-semibold text-gray-800'>Thực đơn</Text>
       </View>
 
-      {/* Có sẵn and Số liệu Tabs */}
       <View className='flex-row border-b border-gray-200'>
         <TouchableOpacity
           className={`flex-1 p-3 pb-3 ${
@@ -187,7 +167,6 @@ const MenuScreen = () => {
       </View>
 
       <ScrollView className='flex-1'>
-        {/* Thiết lập thực đơn Section */}
         {selectedTab === 'Có sẵn' && (
           <TouchableOpacity
             onPress={handleSetupMenuPress}
@@ -206,7 +185,6 @@ const MenuScreen = () => {
           </TouchableOpacity>
         )}
 
-        {/* Categories with Expandable Dishes */}
         {selectedTab === 'Có sẵn' && (
           <View className='px-4 pb-20'>
             <View className='flex-row justify-between items-center mb-4 mt-2'>
@@ -285,7 +263,6 @@ const MenuScreen = () => {
         )}
       </ScrollView>
 
-      {/* Modal for Options with Darkened Background */}
       <Modal
         transparent={true}
         visible={showOptions}
@@ -309,7 +286,6 @@ const MenuScreen = () => {
         </TouchableWithoutFeedback>
       </Modal>
 
-      {/* Modal for Editing Dish */}
       <Modal
         transparent={true}
         visible={showEditModal}
@@ -334,13 +310,24 @@ const MenuScreen = () => {
 
                   <TouchableOpacity
                     onPress={pickImage}
-                    className='bg-blue-600 px-5 py-3 rounded-lg mb-4'>
-                    <Text className='text-white font-medium text-center'>
-                      Chọn hình ảnh từ thiết bị
-                    </Text>
+                    className='border border-gray-300 rounded-lg px-3 py-1.5 flex-row items-center justify-center'
+                    disabled={isLoading || permissionDenied}>
+                    {isLoading ? (
+                      <ActivityIndicator size='small' color='#000000' />
+                    ) : (
+                      <>
+                        <Ionicons
+                          name='cloud-upload-outline'
+                          size={18}
+                          color='gray'
+                          className='mr-1'
+                        />
+                        <Text className='text-gray-800 text-sm'>Thêm ảnh</Text>
+                      </>
+                    )}
                   </TouchableOpacity>
 
-                  <Text className='text-gray-800 mb-1'>Tên món ăn</Text>
+                  <Text className='text-gray-800 my-1 ' >Tên món ăn</Text>
                   <TextInput
                     className='border border-gray-300 p-3 rounded-lg mb-4'
                     placeholder='Nhập tên món ăn'
@@ -383,7 +370,7 @@ const MenuScreen = () => {
 
                   <View className='flex-row justify-between'>
                     <TouchableOpacity
-                      onPress={selectedDish ? saveDishChanges : saveNewDish}
+                      onPress={saveDishChanges}
                       className='bg-green-600 px-5 py-3 rounded-full flex-1 mr-2'>
                       <Text className='text-white font-medium text-center'>Lưu</Text>
                     </TouchableOpacity>
