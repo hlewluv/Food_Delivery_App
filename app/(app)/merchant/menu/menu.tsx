@@ -17,10 +17,13 @@ import { router } from 'expo-router'
 
 const MenuScreen = () => {
   const [selectedTab, setSelectedTab] = useState('Có sẵn')
-  const [showOptions, setShowOptions] = useState(false)
+  const [selectedSubTab, setSelectedSubTab] = useState('7 ngày qua')
   const [expandedCategories, setExpandedCategories] = useState([])
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedDish, setSelectedDish] = useState(null)
+  const [showEditCategoryModal, setShowEditCategoryModal] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [editCategoryName, setEditCategoryName] = useState('')
   const [editDishData, setEditDishData] = useState({
     name: '',
     description: '',
@@ -61,6 +64,24 @@ const MenuScreen = () => {
     }
   ])
 
+  // Simulated data for different sub-tabs
+  const dataBySubTab = {
+    '7 ngày qua': [
+      { rank: 1, name: 'Thịt Cuộn Mực Sấy Te - 300gr', weight: '300gr', revenue: '1,255,000đ' },
+      { rank: 2, name: 'Đùi Phồng Tỏi Ớt - 500gr', weight: '500gr', revenue: '750,000đ' },
+      { rank: 3, name: 'Cơm cháy siêu cha bông - 250gr', weight: '250gr', revenue: '650,000đ' },
+      { rank: 4, name: 'Lạp Xưởng Trứng Muối - 500gr', weight: '500gr', revenue: '485,000đ' },
+      { rank: 5, name: 'Lạp Xưởng Tươi', weight: '', revenue: '325,000đ' },
+      { rank: 6, name: 'Lạp Xưởng Tôm', weight: '', revenue: '200,000đ' }
+    ],
+    'Bán chạy': [
+      { rank: 1, name: 'Lạp Xưởng Tươi', weight: '', revenue: '2,500,000đ' },
+      { rank: 2, name: 'Thịt Cuộn Mực Sấy Te - 300gr', weight: '300gr', revenue: '1,800,000đ' },
+      { rank: 3, name: 'Đùi Phồng Tỏi Ớt - 500gr', weight: '500gr', revenue: '1,200,000đ' },
+      { rank: 4, name: 'KHOAI TÂY CHIÊN', weight: '', revenue: '900,000đ' }
+    ]
+  }
+
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (!permissionResult.granted) {
@@ -81,11 +102,7 @@ const MenuScreen = () => {
   }
 
   const handleSetupMenuPress = () => {
-    setShowOptions(true)
-  }
-
-  const handleBackPress = () => {
-    setShowOptions(false)
+    router.push('/(app)/merchant/menu/addDish')
   }
 
   const toggleCategory = categoryName => {
@@ -101,6 +118,12 @@ const MenuScreen = () => {
     setSelectedDish({ categoryIndex, dishIndex })
     setEditDishData({ ...dish })
     setShowEditModal(true)
+  }
+
+  const handleEditCategoryPress = categoryIndex => {
+    setSelectedCategory(categoryIndex)
+    setEditCategoryName(categories[categoryIndex].name)
+    setShowEditCategoryModal(true)
   }
 
   const saveDishChanges = () => {
@@ -122,13 +145,33 @@ const MenuScreen = () => {
     setSelectedDish(null)
   }
 
-  const addNewDish = () => {
-    router.push('/(app)/merchant/menu/addDish')
-    setShowOptions(false)
+  const saveCategoryChanges = () => {
+    if (!editCategoryName.trim()) {
+      Alert.alert('Lỗi', 'Tên danh mục không được để trống!')
+      return
+    }
+    const updatedCategories = [...categories]
+    updatedCategories[selectedCategory].name = editCategoryName.trim()
+    setCategories(updatedCategories)
+    setShowEditCategoryModal(false)
+    setSelectedCategory(null)
+    setEditCategoryName('')
   }
-    const [isLoading, setIsLoading] = useState(false)
-    const [permissionDenied, setPermissionDenied] = useState(false)
-  
+
+  const deleteCategory = () => {
+    if (categories[selectedCategory].count > 0) {
+      Alert.alert('Lỗi', 'Chỉ có thể xóa danh mục khi không còn món ăn nào!')
+      return
+    }
+    const updatedCategories = categories.filter((_, index) => index !== selectedCategory)
+    setCategories(updatedCategories)
+    setShowEditCategoryModal(false)
+    setSelectedCategory(null)
+    setEditCategoryName('')
+  }
+
+  const [isLoading, setIsLoading] = useState(false)
+  const [permissionDenied, setPermissionDenied] = useState(false)
 
   return (
     <View className='flex-1 bg-white'>
@@ -189,9 +232,6 @@ const MenuScreen = () => {
           <View className='px-4 pb-20'>
             <View className='flex-row justify-between items-center mb-4 mt-2'>
               <Text className='text-2xl font-semibold text-gray-800'>Menu chính</Text>
-              <TouchableOpacity className='bg-green-600 px-5 py-2 rounded-full'>
-                <Text className='text-white font-medium text-lg'>Chọn</Text>
-              </TouchableOpacity>
             </View>
 
             {categories.map((category, categoryIndex) => (
@@ -217,6 +257,11 @@ const MenuScreen = () => {
                   </View>
                   <View className='flex-row items-center'>
                     <Text className='text-gray-600 mr-3'>{category.count} món</Text>
+                    <TouchableOpacity
+                      onPress={() => handleEditCategoryPress(categoryIndex)}
+                      className='p-1'>
+                      <Ionicons name='pencil' size={20} color='gray' />
+                    </TouchableOpacity>
                   </View>
                 </TouchableOpacity>
 
@@ -261,31 +306,58 @@ const MenuScreen = () => {
             ))}
           </View>
         )}
+
+        {/* Số liệu Tab with Sub-tabs */}
+        {selectedTab === 'Số liệu' && (
+          <View className='px-4 pb-20'>
+            <View className='flex-row justify-between mb-4 mt-2'>
+              <TouchableOpacity
+                className={`flex-1 p-2 m-1 border border-gray-300 rounded-lg ${
+                  selectedSubTab === '7 ngày qua' ? 'border-b-2 border-green-600' : ''
+                }`}
+                onPress={() => setSelectedSubTab('7 ngày qua')}>
+                <Text
+                  className={`text-center font-medium ${
+                    selectedSubTab === '7 ngày qua' ? 'text-green-600' : 'text-gray-800'
+                  }`}>
+                  7 ngày qua
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`flex-1 p-2 m-1 border border-gray-300 rounded-lg ${
+                  selectedSubTab === 'Bán chạy' ? 'border-b-2 border-green-600' : ''
+                }`}
+                onPress={() => setSelectedSubTab('Bán chạy')}>
+                <Text
+                  className={`text-center font-medium ${
+                    selectedSubTab === 'Bán chạy' ? 'text-green-600' : 'text-gray-800'
+                  }`}>
+                  Bán chạy
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View>
+              {dataBySubTab[selectedSubTab].map(dish => (
+                <View
+                  key={dish.rank}
+                  className='flex-row items-center p-4 mb-2 bg-white rounded-lg shadow-sm border border-gray-100'>
+                  <Text className='text-lg font-medium text-gray-800 w-8'>{dish.rank}.</Text>
+                  <View className='flex-1'>
+                    <Text className='text-lg font-medium text-gray-800'>{dish.name}</Text>
+                    {dish.weight ? (
+                      <Text className='text-gray-500 text-sm'>{dish.weight}</Text>
+                    ) : null}
+                  </View>
+                  <Text className='text-green-600 font-medium'>{dish.revenue}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
       </ScrollView>
 
-      <Modal
-        transparent={true}
-        visible={showOptions}
-        animationType='slide'
-        onRequestClose={() => setShowOptions(false)}>
-        <TouchableWithoutFeedback onPress={() => setShowOptions(false)}>
-          <View className='flex-1 justify-end' style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-            <TouchableWithoutFeedback>
-              <View className='bg-white p-4 rounded-t-2xl'>
-                <TouchableOpacity className='p-4 mb-2 bg-gray-100 rounded-lg' onPress={addNewDish}>
-                  <Text className='text-lg text-gray-800'>Thêm món ăn</Text>
-                </TouchableOpacity>
-                <TouchableOpacity className='p-4 bg-gray-100 rounded-lg'>
-                  <Text className='text-lg text-gray-800'>
-                    Danh mục (chứa nhiều món ăn cùng loại)
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-
+      {/* Edit Dish Modal */}
       <Modal
         transparent={true}
         visible={showEditModal}
@@ -327,7 +399,7 @@ const MenuScreen = () => {
                     )}
                   </TouchableOpacity>
 
-                  <Text className='text-gray-800 my-1 ' >Tên món ăn</Text>
+                  <Text className='text-gray-800 my-1'>Tên món ăn</Text>
                   <TextInput
                     className='border border-gray-300 p-3 rounded-lg mb-4'
                     placeholder='Nhập tên món ăn'
@@ -384,6 +456,55 @@ const MenuScreen = () => {
                     )}
                   </View>
                 </ScrollView>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Edit Category Modal */}
+      <Modal
+        transparent={true}
+        visible={showEditCategoryModal}
+        animationType='slide'
+        onRequestClose={() => setShowEditCategoryModal(false)}>
+        <TouchableWithoutFeedback onPress={() => setShowEditCategoryModal(false)}>
+          <View
+            className='flex-1 justify-center items-center'
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            <TouchableWithoutFeedback>
+              <View className='bg-white p-6 rounded-lg w-11/12'>
+                <Text className='text-xl font-semibold text-gray-800 mb-4'>Chỉnh sửa danh mục</Text>
+
+                <Text className='text-gray-800 mb-1'>Tên danh mục</Text>
+                <TextInput
+                  className='border border-gray-300 p-3 rounded-lg mb-4'
+                  placeholder='Nhập tên danh mục'
+                  value={editCategoryName}
+                  onChangeText={setEditCategoryName}
+                />
+
+                <View className='flex-row justify-between'>
+                  <TouchableOpacity
+                    onPress={saveCategoryChanges}
+                    className='bg-green-600 px-5 py-3 rounded-full flex-1 mr-2'>
+                    <Text className='text-white font-medium text-center'>Lưu</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={deleteCategory}
+                    className={`px-5 py-3 rounded-full flex-1 ml-2 ${
+                      categories[selectedCategory]?.count === 0 ? 'bg-red-600' : 'bg-gray-300'
+                    }`}
+                    disabled={categories[selectedCategory]?.count > 0}>
+                    <Text
+                      className={`font-medium text-center ${
+                        categories[selectedCategory]?.count === 0 ? 'text-white' : 'text-gray-600'
+                      }`}>
+                      Xóa
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </TouchableWithoutFeedback>
           </View>

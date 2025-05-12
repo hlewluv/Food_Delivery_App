@@ -16,7 +16,7 @@ import * as FileSystem from 'expo-file-system';
 import { router } from 'expo-router';
 
 const AddDishScreen = () => {
-  // Hardcoded form state
+  // Form state
   const [formData, setFormData] = useState({
     dishName: '',
     description: '',
@@ -28,13 +28,16 @@ const AddDishScreen = () => {
   const [imageSize, setImageSize] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
+  const [newCategory, setNewCategory] = useState(''); // State for new category input
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false); // Toggle new category input
 
-  // Hardcoded category options (can be fetched from API later)
-  const categories = [
+  // Category options (dynamic, can be updated)
+  const [categories, setCategories] = useState([
     { label: 'Đặc sản', value: 'Đặc sản' },
     { label: 'Món chính', value: 'Món chính' },
-    { label: 'Đồ uống', value: 'Đồ uống' }
-  ];
+    { label: 'Đồ uống', value: 'Đồ uống' },
+    { label: 'Tạo danh mục mới', value: 'new' } // Option to create new category
+  ]);
 
   // Check and request permissions on component mount
   useEffect(() => {
@@ -88,6 +91,39 @@ const AddDishScreen = () => {
     }
   };
 
+  // Function to handle category selection
+  const handleCategoryChange = (itemValue: string) => {
+    if (itemValue === 'new') {
+      setShowNewCategoryInput(true);
+      setFormData({ ...formData, category: '' }); // Clear category until new one is entered
+    } else {
+      setShowNewCategoryInput(false);
+      setFormData({ ...formData, category: itemValue });
+      setNewCategory('');
+    }
+  };
+
+  // Function to handle new category input
+  const handleNewCategorySubmit = () => {
+    if (!newCategory.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập tên danh mục mới');
+      return;
+    }
+
+    // Check if category already exists
+    if (categories.some(cat => cat.value.toLowerCase() === newCategory.trim().toLowerCase())) {
+      Alert.alert('Lỗi', 'Danh mục này đã tồn tại');
+      return;
+    }
+
+    // Add new category to list
+    const newCategoryValue = newCategory.trim();
+    setCategories([...categories.filter(cat => cat.value !== 'new'), { label: newCategoryValue, value: newCategoryValue }, { label: 'Tạo danh mục mới', value: 'new' }]);
+    setFormData({ ...formData, category: newCategoryValue });
+    setNewCategory('');
+    setShowNewCategoryInput(false);
+  };
+
   // Function to handle form submission
   const handleSubmit = () => {
     // Validation
@@ -101,23 +137,43 @@ const AddDishScreen = () => {
       return;
     }
 
+    if (!formData.category && !newCategory.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng chọn hoặc tạo danh mục');
+      return;
+    }
+
+    // Use new category if still in input
+    const finalCategory = formData.category || newCategory.trim();
+    if (!finalCategory) {
+      Alert.alert('Lỗi', 'Vui lòng chọn hoặc tạo danh mục');
+      return;
+    }
+
     // Structured data for API (ready to send)
     const newDish = {
       name: formData.dishName,
       description: formData.description,
       price: formData.price,
-      category: formData.category,
+      category: finalCategory,
       notes: formData.notes,
       image: formData.image
     };
 
     console.log('Data to send to API:', newDish);
 
+    // If new category was created, ensure it's in categories
+    if (newCategory.trim() && !categories.some(cat => cat.value === newCategory.trim())) {
+      setCategories([...categories.filter(cat => cat.value !== 'new'), { label: newCategory.trim(), value: newCategory.trim() }, { label: 'Tạo danh mục mới', value: 'new' }]);
+    }
+
     Alert.alert('Thành công', 'Món ăn đã được thêm thành công', [
-      { text: 'OK', onPress: () => {
-        resetForm();
-        router.back(); // Navigate back to previous screen
-      }}
+      {
+        text: 'OK',
+        onPress: () => {
+          resetForm();
+          router.back(); // Navigate back to previous screen
+        }
+      }
     ]);
   };
 
@@ -132,6 +188,8 @@ const AddDishScreen = () => {
       image: null
     });
     setImageSize(0);
+    setNewCategory('');
+    setShowNewCategoryInput(false);
   };
 
   return (
@@ -240,8 +298,8 @@ const AddDishScreen = () => {
         {/* Danh mục */}
         <View className='border border-gray-300 rounded-lg mb-4'>
           <Picker
-            selectedValue={formData.category}
-            onValueChange={itemValue => setFormData({ ...formData, category: itemValue })}
+            selectedValue={showNewCategoryInput ? 'new' : formData.category}
+            onValueChange={handleCategoryChange}
             style={{
               height: 52,
               paddingHorizontal: 12,
@@ -255,6 +313,23 @@ const AddDishScreen = () => {
             ))}
           </Picker>
         </View>
+        {/* New Category Input */}
+        {showNewCategoryInput && (
+          <View className='flex-row items-center mb-4'>
+            <TextInput
+              className='flex-1 border border-gray-300 rounded-lg p-3 text-base'
+              style={{ height: 52 }}
+              placeholder='Nhập tên danh mục mới'
+              value={newCategory}
+              onChangeText={setNewCategory}
+            />
+            <TouchableOpacity
+              onPress={handleNewCategorySubmit}
+              className='ml-2 bg-green-600 p-3 rounded-lg'>
+              <Ionicons name='checkmark' size={20} color='white' />
+            </TouchableOpacity>
+          </View>
+        )}
         {/* Ghi chú */}
         <TextInput
           className='border border-gray-300 rounded-lg p-3 mb-4 text-base'
@@ -267,7 +342,7 @@ const AddDishScreen = () => {
       </View>
 
       {/* Submit Button */}
-      <View className='px-4 pt-[88px]'>
+      <View className='px-4 absolute bottom-0 left-0 right-0'>
         <TouchableOpacity
           onPress={handleSubmit}
           className='bg-green-600 p-4 rounded-lg items-center justify-center'

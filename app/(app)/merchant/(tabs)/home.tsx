@@ -25,7 +25,7 @@ const Home = () => {
       </View>
 
       {/* Revenue Section */}
-      <View className='bg-green-600 rounded-xl p-4 mt-4 mx-3'>
+      <View className='bg-[#00b14f] rounded-xl p-4 mt-4 mx-3 shadow-md'>
         <View className='flex-row justify-between items-center'>
           <View>
             <Text className='text-white text-sm'>Doanh thu hôm nay</Text>
@@ -53,19 +53,24 @@ const Home = () => {
         <View className='flex-row flex-wrap justify-between'>
           {/* Đơn hàng */}
           <TouchableOpacity
-            className='items-center w-1/4 mb-4 '
-            onPress={() => router.push('/merchant/order')} // Navigate to the Order screen
+            className='items-center w-1/4 mb-4'
+            onPress={() => router.push('/merchant/order')}
+            accessibilityLabel="Quản lý đơn hàng"
           >
             <View className='bg-white p-3 rounded-full border border-gray-200 shadow-sm'>
-              <Feather name='shopping-bag' size={24} color='#3b82f6' />
+              <Feather name='shopping-bag' size={24} color='#00b14f' />
             </View>
             <Text className='mt-2 text-sm text-center'>Đơn hàng</Text>
           </TouchableOpacity>
 
           {/* Thực đơn */}
-          <TouchableOpacity className='items-center w-1/4 mb-4'  onPress={() => router.push('/(app)/merchant/menu/menu')}>
-            <View className='bg-white p-3 rounded-full border border-gray-200 shadow-sm'>
-              <Feather name='book-open' size={24} color='#3b82f6' />
+          <TouchableOpacity
+            className='items-center w-1/4 mb-4'
+            onPress={() => router.push('/(app)/merchant/menu/menu')}
+            accessibilityLabel="Quản lý thực đơn"
+          >
+            <View className='bg-white p-3 rounded-full border border-gray-200 shadow-sm relative'>
+              <Feather name='book-open' size={24} color='#00b14f' />
               <View className='absolute -top-1 -right-1 bg-red-500 rounded-full h-5 w-5 flex items-center justify-center'>
                 <Text className='text-white text-xs'>1</Text>
               </View>
@@ -74,17 +79,25 @@ const Home = () => {
           </TouchableOpacity>
 
           {/* Khuyến mãi */}
-          <TouchableOpacity className='items-center w-1/4 mb-4'>
+          <TouchableOpacity
+            className='items-center w-1/4 mb-4'
+            onPress={() => router.push('/(app)/merchant/voucher')}
+            accessibilityLabel="Quản lý khuyến mãi"
+          >
             <View className='bg-white p-3 rounded-full border border-gray-200 shadow-sm'>
-              <Ionicons name='pricetag' size={24} color='#3b82f6' />
+              <Ionicons name='pricetag' size={24} color='#00b14f' />
             </View>
             <Text className='mt-2 text-sm text-center'>Khuyến mãi</Text>
           </TouchableOpacity>
 
           {/* Báo cáo */}
-          <TouchableOpacity className='items-center w-1/4 mb-4'>
+          <TouchableOpacity
+            className='items-center w-1/4 mb-4'
+            onPress={() => router.push('/(app)/merchant/revenue')}
+            accessibilityLabel="Xem báo cáo"
+          >
             <View className='bg-white p-3 rounded-full border border-gray-200 shadow-sm'>
-              <Feather name='bar-chart-2' size={24} color='#3b82f6' />
+              <Feather name='bar-chart-2' size={24} color='#00b14f' />
             </View>
             <Text className='mt-2 text-sm text-center'>Báo cáo</Text>
           </TouchableOpacity>
@@ -92,10 +105,13 @@ const Home = () => {
       </View>
 
       {/* Latest News Section */}
-      <View className='bg-white  px-3 mb-5'>
+      <View className='bg-white px-3 mb-5'>
         <Text className='text-lg font-semibold mb-4'>Có gì mới?</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <TouchableOpacity className='mr-4 active:opacity-70'>
+          <TouchableOpacity
+            className='mr-4 active:opacity-70'
+            accessibilityLabel="Tìm hiểu thêm về GrabAcademy"
+          >
             <View className='w-56 h-64 bg-white rounded-xl flex-col border border-gray-200 p-3 shadow-sm'>
               <Image
                 source={{
@@ -108,13 +124,16 @@ const Home = () => {
               </Text>
               <View className='border-t border-gray-300 my-2' />
               <View className='flex-row justify-between items-center mt-auto'>
-                <Text className='text-blue-500'>Tìm hiểu thêm</Text>
-                <Feather name='chevron-right' size={16} color='#3b82f6' />
+                <Text className='text-[#00b14f] font-medium'>Tìm hiểu thêm</Text>
+                <Feather name='chevron-right' size={16} color='#00b14f' />
               </View>
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity className='mr-4 active:opacity-70'>
+          <TouchableOpacity
+            className='mr-4 active:opacity-70'
+            accessibilityLabel="Tìm hiểu thêm về GrabAcademy"
+          >
             <View className='w-56 h-64 bg-white rounded-xl flex-col border border-gray-200 p-3 shadow-sm'>
               <Image
                 source={{
@@ -127,8 +146,8 @@ const Home = () => {
               </Text>
               <View className='border-t border-gray-300 my-2' />
               <View className='flex-row justify-between items-center mt-auto'>
-                <Text className='text-blue-500'>Tìm hiểu thêm</Text>
-                <Feather name='chevron-right' size={16} color='#3b82f6' />
+                <Text className='text-[#00b14f] font-medium'>Tìm hiểu thêm</Text>
+                <Feather name='chevron-right' size={16} color='#00b14f' />
               </View>
             </View>
           </TouchableOpacity>

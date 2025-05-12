@@ -13,7 +13,6 @@ interface MenuItem {
   description?: string
 }
 
-// Define the Order interface with customer and biker details and items array
 interface Order {
   id: string
   customerName: string
@@ -25,7 +24,6 @@ interface Order {
 }
 
 const Order = () => {
-  // List of tabs in order
   const tabs = ['Đang chuẩn bị', 'Sẵn sàng', 'Sắp tới', 'Lịch sử']
 
   // State to manage the active tab
