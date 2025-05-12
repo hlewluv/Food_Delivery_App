@@ -1,146 +1,178 @@
-import React, { useState } from 'react'
-import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native'
-import { useLocalSearchParams, useRouter } from 'expo-router'
-import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons'
-import FoodItem from '@/components/restaurant/foodItemOx'
-import FoodItemSmall from '@/components/restaurant/foodItemOy'
-import ReviewCard from '@/components/restaurant/review'
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
+import FoodItem from '@/components/restaurant/foodItemOx';
+import FoodItemSmall from '@/components/restaurant/foodItemOy';
+import ReviewCard from '@/components/restaurant/review';
 
 interface MenuItem {
-  id: string
-  name: string
-  description: string
-  price: string
-  image?: any
-  time?: string
-  discount?: string
-  options?: {
-    name: string
-    selected: boolean
-  }[]
-}
-
-interface MenuSection {
-  id: string
-  category: string
-  items: MenuItem[]
+  id: string;
+  food_name: string;
+  description: string;
+  price: string;
+  image: string;
+  time?: string;
+  food_type: string;
+  option_menu?: Array<{
+    id: string;
+    option_name: string;
+  }>;
 }
 
 interface Restaurant {
-  id: string
-  name: string
-  image: any
-  rating: number
-  deliveryTime?: string
-  time?: string
-  menuItems?: MenuSection[]
+  id: string;
+  name: string;
+  image: string;
+  rating: number;
+  delivery_time?: string;
 }
 
 interface CartItem {
-  item: MenuItem
-  quantity: number
+  item: MenuItem;
+  quantity: number;
 }
 
-const reviews = [
-  {
-    id: '1',
-    username: 'KimChil',
-    rating: 5,
-    comment: 'bún ngon, mầm nêm rất vừa vị ko bị ngọt. khẩu phần rất vừa ăn. dóg hộp rất tiện lợi.',
-    date: '2 ngày trước'
-  }
-]
+interface Review {
+  id: string;
+  username: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
 
 const RestaurantDetail: React.FC = () => {
-  const router = useRouter()
-  const { id, restaurant } = useLocalSearchParams<{
-    id: string
-    restaurant?: string
-  }>()
+  const router = useRouter();
+  const { id, restaurant, restaurantDetails } = useLocalSearchParams<{
+    id: string;
+    restaurant?: string;
+    restaurantDetails?: string;
+  }>();
 
-  const restaurantData: Restaurant | null = restaurant ? JSON.parse(restaurant) : null
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [restaurantData, setRestaurantData] = useState<Restaurant | null>(null);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleFoodPress = (foodItem: MenuItem) => {
-    router.push({
-      pathname: `/customer/foodDetail/[id]`,
-      params: {
-        food: JSON.stringify({
-          ...foodItem,
-          restaurantName: restaurantData?.name,
-          restaurantImage: restaurantData?.image
-        })
+  useEffect(() => {
+    if (restaurant) {
+      try {
+        const parsedRestaurant = JSON.parse(restaurant);
+        setRestaurantData(parsedRestaurant);
+        
+        if (restaurantDetails) {
+          const parsedDetails = JSON.parse(restaurantDetails);
+          setMenuItems(parsedDetails);
+        }
+      } catch (error) {
+        console.error('Error parsing restaurant data:', error);
+      } finally {
+        setLoading(false);
       }
-    })
-  }
+    }
+  }, [restaurant, restaurantDetails]);
+
+  const groupMenuItemsByCategory = () => {
+    const categories = new Map<string, MenuItem[]>();
+    
+    menuItems.forEach(item => {
+      const category = item.food_type || 'Other';
+      if (!categories.has(category)) {
+        categories.set(category, []);
+      }
+      categories.get(category)?.push(item);
+    });
+    
+    return Array.from(categories.entries()).map(([category, items]) => ({
+      id: category,
+      category,
+      items
+    }));
+  };
+
+  const menuSections = groupMenuItemsByCategory();
+  const featuredItems = menuItems.slice(0, 4); // Show first 4 items as featured
+
+  // const handleFoodPress = (foodItem: MenuItem) => {
+  //   router.push({
+  //     pathname: `/customer/foodDetail/[id]`,
+  //     params: {
+  //       food: JSON.stringify({
+  //         ...foodItem,
+  //         restaurantName: restaurantData?.name,
+  //         restaurantImage: restaurantData?.image
+  //       })
+  //     }
+  //   });
+  // };
 
   const handleBackPress = () => {
-    router.back()
-  }
+    router.back();
+  };
 
   const handleAddToCart = (item: MenuItem, quantityChange: number) => {
     setCartItems(prevItems => {
-      const existingItemIndex = prevItems.findIndex(cartItem => cartItem.item.id === item.id)
+      const existingItemIndex = prevItems.findIndex(cartItem => cartItem.item.id === item.id);
       
       if (existingItemIndex >= 0) {
-        // Item already exists in cart
-        const updatedItems = [...prevItems]
-        const newQuantity = updatedItems[existingItemIndex].quantity + quantityChange
+        const updatedItems = [...prevItems];
+        const newQuantity = updatedItems[existingItemIndex].quantity + quantityChange;
         
         if (newQuantity <= 0) {
-          // Remove item if quantity becomes 0 or less
-          return updatedItems.filter((_, index) => index !== existingItemIndex)
+          return updatedItems.filter((_, index) => index !== existingItemIndex);
         }
         
-        // Update quantity
         updatedItems[existingItemIndex] = {
           ...updatedItems[existingItemIndex],
           quantity: newQuantity
-        }
-        return updatedItems
+        };
+        return updatedItems;
       } else if (quantityChange > 0) {
-        // Add new item to cart
-        return [...prevItems, { item, quantity: quantityChange }]
+        return [...prevItems, { item, quantity: quantityChange }];
       }
       
-      return prevItems
-    })
-  }
+      return prevItems;
+    });
+  };
 
   const handleViewCart = () => {
-    // Log the cart items to the console
-    console.log('Cart Items:', cartItems);
-    
     router.push({
       pathname: '/customer/cart',
-
       params: {
         cart: JSON.stringify(cartItems),
         restaurant: JSON.stringify(restaurantData)
       }
-    })
-  }
+    });
+  };
 
-  // Calculate total items and total price
-  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0)
-  const totalPrice = cartItems.reduce((total, item) => {
-    const price = parseFloat(item.item.price.replace(/[^\d]/g, ''))
-    return total + (price * item.quantity)
-  }, 0)
-
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: string) => {
+    const numericAmount = parseFloat(amount);
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND'
-    }).format(amount)
+    }).format(numericAmount);
+  };
+
+  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const totalPrice = cartItems.reduce((total, item) => {
+    const price = parseFloat(item.item.price);
+    return total + (price * item.quantity);
+  }, 0);
+
+  if (loading) {
+    return (
+      <View className='flex-1 justify-center items-center bg-gray-50'>
+        <Text className='mt-4 text-gray-500'>Đang tải thông tin nhà hàng...</Text>
+      </View>
+    );
   }
 
   if (!restaurantData) {
     return (
       <View className='flex-1 justify-center items-center bg-gray-50'>
-        <Text className='mt-4 text-gray-500'>Đang tải thông tin nhà hàng...</Text>
+        <Text className='mt-4 text-gray-500'>Không tìm thấy thông tin nhà hàng</Text>
       </View>
-    )
+    );
   }
 
   return (
@@ -149,7 +181,7 @@ const RestaurantDetail: React.FC = () => {
         {/* Image Header */}
         <View className='bg-white relative'>
           <Image
-            source={restaurantData.image}
+            source={{ uri: restaurantData.image }}
             className='w-full h-56'
             resizeMode='cover'
             blurRadius={6}
@@ -173,7 +205,7 @@ const RestaurantDetail: React.FC = () => {
               <View className='px-5 py-4 flex-row items-start'>
                 <View className='relative'>
                   <Image
-                    source={restaurantData.image}
+                    source={{ uri: restaurantData.image }}
                     className='w-24 h-24 rounded-lg mr-3 border-2 border-white shadow-lg'
                     resizeMode='cover'
                   />
@@ -195,12 +227,14 @@ const RestaurantDetail: React.FC = () => {
                       <Text className='ml-1 text-gray-500 text-sm'>(103)</Text>
                     </View>
 
-                    <View className='flex-row items-center'>
-                      <Ionicons name='time-outline' size={16} color='#6b7280' />
-                      <Text className='text-gray-500 text-sm ml-1'>
-                        {restaurantData.deliveryTime || restaurantData.time}
-                      </Text>
-                    </View>
+                    {restaurantData.delivery_time && (
+                      <View className='flex-row items-center'>
+                        <Ionicons name='time-outline' size={16} color='#6b7280' />
+                        <Text className='text-gray-500 text-sm ml-1'>
+                          {restaurantData.delivery_time}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               </View>
@@ -235,54 +269,55 @@ const RestaurantDetail: React.FC = () => {
           </View>
         </View>
 
-        {/* Menu Grid Section */}
-        <View className='bg-white px-4'>
-          <Text className='text-xl font-bold text-gray-900 mb-4 px-2'>Món ăn nổi bật</Text>
-          {restaurantData.menuItems?.map(section => (
-            <View key={section.id} className='mb-8'>
-              <View className='flex flex-row flex-wrap'>
-                {section.items.map(item => (
-                  <View key={item.id} className='w-1/2 p-2'>
-                    <FoodItemSmall
-                      item={{
-                        ...item,
-                        image: item.image || restaurantData.image
-                      }}
-                      onPress={() => handleFoodPress(item)}
-                      onAddToCart={(quantity: number) => handleAddToCart(item, quantity)}
-
-                      quantity={cartItems.find(cartItem => cartItem.item.id === item.id)?.quantity || 0}
-                    />
-                  </View>
-                ))}
-              </View>
+        {/* Featured Menu Items Section */}
+        {featuredItems.length > 0 && (
+          <View className='bg-white px-4'>
+            <Text className='text-xl font-bold text-gray-900 mb-4 px-2'>Món ăn nổi bật</Text>
+            <View className='flex flex-row flex-wrap'>
+              {featuredItems.map(item => (
+                <View key={item.id} className='w-1/2 p-2'>
+                  <FoodItemSmall
+                    item={{
+                      id: item.id,
+                      name: item.food_name,
+                      description: item.description,
+                      price: item.price,
+                      image: item.image ? { uri: item.image } : null,
+                      time: item.time
+                    }}
+                    onPress={console.log('chi tiết món ăn')}
+                    onAddToCart={(quantity: number) => handleAddToCart(item, quantity)}
+                    quantity={cartItems.find(cartItem => cartItem.item.id === item.id)?.quantity || 0}
+                  />
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
-
-        {/* Reviews Section */}
-        <View className='bg-gray-50 px-5 py-2'>
-          {reviews.map(review => (
-            <ReviewCard key={review.id} review={review} />
-          ))}
-        </View>
+          </View>
+        )}
 
         {/* Full Menu List Section */}
         <View className='bg-white px-7 mt-1'>
-          {restaurantData.menuItems?.map(section => (
+          {menuSections.map(section => (
             <View key={section.id} className='mb-6'>
-              <Text className='text-lg font-bold text-gray-900 mb-4'>{section.category}</Text>
+              <Text className='text-lg font-bold text-gray-900 mb-4'>Danh sách món ăn</Text>
               {section.items.map(item => (
                 <FoodItem
                   key={item.id}
                   item={{
-                    ...item,
-                    image: item.image || restaurantData.image
+                    id: item.id,
+                    name: item.food_name,
+                    description: item.description,
+                    price: item.price,
+                    image: item.image ? { uri: item.image } : null,
+                    time: item.time,
+                    options: item.option_menu
                   }}
-                  onPress={() => handleFoodPress(item)}
+                  onPress={console.log('chi tiết món ăn')}
                   onAddToCart={(quantity: number) => handleAddToCart(item, quantity)}
-                  quantity={cartItems.find(cartItem => cartItem.item.id === item.id)?.quantity || 0} onRemoveFromCart={undefined} onUpdateQuantity={undefined}                />
-
+                  quantity={cartItems.find(cartItem => cartItem.item.id === item.id)?.quantity || 0}
+                  onRemoveFromCart={undefined}
+                  onUpdateQuantity={undefined}
+                />
               ))}
             </View>
           ))}
@@ -304,13 +339,13 @@ const RestaurantDetail: React.FC = () => {
               <Text className='text-white font-bold text-lg'>Xem giỏ hàng</Text>
             </View>
             <Text className='text-white font-bold text-lg'>
-              {formatCurrency(totalPrice)}
+              {formatCurrency(totalPrice.toString())}
             </Text>
           </TouchableOpacity>
         </View>
       )}
     </View>
-  )
-}
+  );
+};
 
-export default RestaurantDetail
+export default RestaurantDetail;

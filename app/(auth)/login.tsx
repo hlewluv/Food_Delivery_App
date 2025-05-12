@@ -4,21 +4,22 @@ import { icons } from '@/constant/icons';
 import { images } from '@/constant/images';
 import { Link, router } from 'expo-router';
 import InputField from '@/components/InputField';
-
-import { mockLogin } from '@/apis/authService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import apiClient from '@/apis/config/apiClient';
+import { LoginPayload, AuthResponse } from '@/apis/auth/types'; // Import interfaces
+import { login } from '@/apis/auth/authService';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<LoginPayload>({
     username: '',
-    email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // 👈 Thêm state này
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleChange = (name: string, value: string) => {
+  const handleChange = (name: keyof LoginPayload, value: string) => {
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -30,24 +31,33 @@ const Login = () => {
       setErrorMessage('Vui lòng nhập đầy đủ thông tin');
       setShowErrorModal(true);
       return;
-    }  
+    }
 
-    setIsLoading(true); // 👈 Bắt đầu loading
+    setIsLoading(true);
 
-    try {    
-      const user = await mockLogin(formData.username, formData.password);
-      console.log('Login successful:', user);
-      router.push('/customer/(tabs)/home', user);
+    try {
+      await login({
+        username: formData.username,
+        password: formData.password
+      });
 
-
+      // Chuyển hướng sau khi login thành công
+      router.replace('/(app)/customer/(tabs)/home');
     } catch (error: any) {
-      setErrorMessage(error.message);
+      console.error('API Error:', error);
+      // Xử lý error response
+      setErrorMessage(
+        error.response?.data?.message || 
+        error.message || 
+        'Đã xảy ra lỗi không xác định'
+      );
       setShowErrorModal(true);
     } finally {
-      setIsLoading(false); // 👈 Kết thúc loading
+      setIsLoading(false);
     }
   };
 
+  // Phần UI giữ nguyên không thay đổi
   return (
     <ScrollView className='flex-1 bg-white px-6'>
       {/* Header */}
@@ -55,15 +65,15 @@ const Login = () => {
         <Image source={images.logo} className='max-w-72 h-32' />
       </View>
 
-      {/* Username */}
+      {/* Username Input */}
       <InputField
         icon={icons.human}
-        placeholder='Username hoặc Email'
+        placeholder='Username'
         value={formData.username}
         onChangeText={text => handleChange('username', text)}
       />
 
-      {/* Password */}
+      {/* Password Input */}
       <InputField
         icon={icons.password}
         placeholder='Password'
@@ -74,11 +84,11 @@ const Login = () => {
         onRightIconPress={() => setShowPassword(!showPassword)}
       />
 
-      {/* Log in Button */}
+      {/* Login Button */}
       <TouchableOpacity
         className='bg-green-500 py-4 rounded-lg items-center mb-6'
         onPress={handleSubmit}
-        disabled={isLoading} // 👈 Disable khi loading
+        disabled={isLoading}
       >
         {isLoading ? (
           <ActivityIndicator color="#fff" />
@@ -140,6 +150,7 @@ const Login = () => {
           </View>
         </View>
       </Modal>
+      
     </ScrollView>
   );
 };

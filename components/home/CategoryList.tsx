@@ -1,37 +1,43 @@
 // src/components/CategoryList.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, FlatList, ListRenderItem } from 'react-native';
-import { images } from '@/constant/images';
-import SectionHeader from '@/components/SectionHeader';
 import { useRouter } from 'expo-router';
+import { getCategories } from '@/apis/category/categoryList';
+import SectionHeader from '@/components/SectionHeader';
 
 interface CategoryItem {
   id: string;
-  name: string;
-  image: any;
+  category: string;
+  image: string;
 }
-
-const foodCategories: CategoryItem[] = [
-  { id: '1', name: 'Fast Food', image: images.hutieu },
-  { id: '2', name: 'Drink', image: images.myquang },
-  { id: '3', name: 'Cafe', image: images.pizza },
-  { id: '4', name: 'Beefsteak', image: images.thitnuong },
-  { id: '5', name: 'Pasta', image: images.trungcut },
-  { id: '6', name: 'Pizza', image: images.ruou },
-  { id: '7', name: 'Milk', image: images.banh }
-];
 
 const CategoryList = () => {
   const router = useRouter();
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getCategories();
+        setCategories(data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleCategoryPress = (category: CategoryItem) => {
-    // Navigate to restaurants tab with category parameters
     router.push({
-      pathname: '/(tabs)/restaurants',
+      pathname: '../customer/(tabs)/restaurants',
       params: { 
         categoryId: category.id, 
-        categoryName: category.name,
-        filterType: 'category' // Add filter type to distinguish between different filters
+        categoryName: category.category,
+        filterType: 'category'
       }
     });
   };
@@ -43,20 +49,29 @@ const CategoryList = () => {
     >
       <View className='bg-gray-100 p-1 rounded-full'>
         <Image
-          source={item.image}
+          source={{ uri: item.image }}
           className='w-16 h-16 rounded-full'
           style={{ borderRadius: 9999 }}
         />
       </View>
-      <Text className='mt-2 text-xs text-gray-700'>{item.name}</Text>
+      <Text className='mt-2 text-xs text-gray-700'>{item.category}</Text>
     </TouchableOpacity>
   );
+
+  if (loading) {
+    return (
+      <View className='mt-2'>
+        <SectionHeader title='Danh mục' />
+        <Text>Loading categories...</Text>
+      </View>
+    );
+  }
 
   return (
     <View className='mt-2'>
       <SectionHeader title='Danh mục' />
       <FlatList
-        data={foodCategories}
+        data={categories}
         renderItem={renderCategoryItem}
         keyExtractor={item => item.id}
         horizontal
