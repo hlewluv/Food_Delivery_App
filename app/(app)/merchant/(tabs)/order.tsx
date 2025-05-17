@@ -24,10 +24,10 @@ interface Order {
 }
 
 const Order = () => {
-  const tabs = ['Đang chuẩn bị', 'Sẵn sàng', 'Sắp tới', 'Lịch sử']
+  const tabs = ['Chờ xác nhận', 'Đang chuẩn bị', 'Sẵn sàng', 'Lịch sử']
 
   // State to manage the active tab
-  const [activeTab, setActiveTab] = useState('Đang chuẩn bị')
+  const [activeTab, setActiveTab] = useState('Chờ xác nhận')
 
   // State to manage which order's details are being viewed
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
@@ -41,7 +41,7 @@ const Order = () => {
       bikerAvatar:
         'https://vcdn1-giaitri.vnecdn.net/2025/03/19/jisoo-1-1742349532-1742349698-5135-1742349805.jpg?w=1200&h=0&q=100&dpr=1&fit=crop&s=hGqSXJnPiHy3r6XbGozF2Q',
       time: '10 phút',
-      status: 'Đang chuẩn bị',
+      status: 'Chờ xác nhận',
       items: [
         {
           item: {
@@ -74,7 +74,7 @@ const Order = () => {
       bikerAvatar:
         'https://vcdn1-giaitri.vnecdn.net/2025/03/19/jisoo-1-1742349532-1742349698-5135-1742349805.jpg?w=1200&h=0&q=100&dpr=1&fit=crop&s=hGqSXJnPiHy3r6XbGozF2Q',
       time: '10 phút',
-      status: 'Sẵn sàng',
+      status: 'Đang chuẩn bị',
       items: [
         {
           item: {
@@ -107,7 +107,7 @@ const Order = () => {
       bikerAvatar:
         'https://vcdn1-giaitri.vnecdn.net/2025/03/19/jisoo-1-1742349532-1742349698-5135-1742349805.jpg?w=1200&h=0&q=100&dpr=1&fit=crop&s=hGqSXJnPiHy3r6XbGozF2Q',
       time: '10 phút',
-      status: 'Sắp tới',
+      status: 'Sẵn sàng',
       items: [
         {
           item: {
@@ -172,9 +172,9 @@ const Order = () => {
   const moveToNextTab = (orderId: string) => {
     setOrders(prevOrders => {
       return prevOrders.map(order => {
-        if (order.id === orderId) {
+        if (order.id === orderId && order.status !== 'Lịch sử') {
           const currentTabIndex = tabs.indexOf(order.status)
-          const nextTabIndex = (currentTabIndex + 1) % tabs.length // Loop back to first tab if at the end
+          const nextTabIndex = currentTabIndex + 1 // Move to next tab
           return { ...order, status: tabs[nextTabIndex] }
         }
         return order
@@ -209,7 +209,7 @@ const Order = () => {
 
   // Handle status button press
   const handleStatusPress = (order: Order) => {
-    if (activeTab !== 'Lịch sử') {
+    if (order.status !== 'Lịch sử') {
       moveToNextTab(order.id)
     }
   }
@@ -327,34 +327,35 @@ const Order = () => {
                 </View>
                 <View className='flex-col items-end'>
                   <Text className='text-base text-gray-500 mb-2'>{order.time}</Text>
-                  <View className='bg-gray-100 rounded-lg p-2 flex-col items-end mt-4 h-12 w-28 justify-center items-center'>
+                  <View className='bg-gray-100 rounded-lg p-2 flex-col mt-4 h-12 w-36 justify-center items-center'>
                     <TouchableOpacity
                       onPress={e => {
                         e.stopPropagation() // Prevent parent TouchableOpacity from triggering
                         handleStatusPress(order)
                       }}
-                      className='flex-row items-center'>
+                      className='flex-row items-center'
+                      disabled={order.status === 'Lịch sử'}>
                       <Feather
                         name='check'
                         size={18}
                         color={
-                          order.status === 'Đang chuẩn bị'
+                          order.status === 'Chờ xác nhận'
+                            ? '#f97316' // Orange for "Chờ xác nhận"
+                            : order.status === 'Đang chuẩn bị'
                             ? '#3b82f6' // Blue for "Đang chuẩn bị"
                             : order.status === 'Sẵn sàng'
                             ? '#22c55e' // Green for "Sẵn sàng"
-                            : order.status === 'Sắp tới'
-                            ? '#f59e0b' // Yellow for "Sắp tới"
                             : '#6b7280' // Gray for "Lịch sử"
                         }
                       />
                       <Text
                         className={`ml-1 text-sm font-medium ${
-                          order.status === 'Đang chuẩn bị'
+                          order.status === 'Chờ xác nhận'
+                            ? 'text-orange-500'
+                            : order.status === 'Đang chuẩn bị'
                             ? 'text-blue-500'
                             : order.status === 'Sẵn sàng'
                             ? 'text-green-500'
-                            : order.status === 'Sắp tới'
-                            ? 'text-yellow-500'
                             : 'text-gray-500'
                         }`}>
                         {order.status}

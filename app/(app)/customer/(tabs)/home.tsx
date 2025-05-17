@@ -12,7 +12,7 @@ import { useEffect } from 'react';
 const HomeScreen = () => {
   const [searchQuery, setSearchQuery] = React.useState('')
   const [likedRestaurants, setLikedRestaurants] = React.useState<Record<string, boolean>>({})
-  const router = useRouter() // 👈 đây nè
+  const router = useRouter() 
 
   const toggleLike = (restaurantId: string) => {
     setLikedRestaurants(prev => ({
