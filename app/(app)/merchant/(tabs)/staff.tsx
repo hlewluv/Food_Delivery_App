@@ -4,7 +4,7 @@ import React from 'react'
 const staff = () => {
   return (
     <View>
-      <Text>staff</Text>
+      <Text>hello</Text>
     </View>
   )
 }
