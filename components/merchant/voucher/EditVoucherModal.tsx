@@ -63,7 +63,7 @@ const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
         _id: selectedVoucher._id,
         name: selectedVoucher.name,
         discount: selectedVoucher.discount.replace('%', ''),
-        minOrder: selectedVoucher.minOrder.replace('đ', ''),
+        minOrder: selectedVoucher.minOrder.replace(/[,đ]/g, ''),
         expiryDate: selectedVoucher.expiryDate.replace('HSD: ', ''),
         image: selectedVoucher.image || null,
         status: selectedVoucher.status,
@@ -126,14 +126,30 @@ const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
     }
   };
 
+  const validateInputs = () => {
+    if (!editVoucherData.name.trim()) {
+      Alert.alert('Lỗi', 'Tên voucher không được để trống.');
+      return false;
+    }
+    const discountValue = parseFloat(editVoucherData.discount);
+    if (isNaN(discountValue) || discountValue <= 0 || discountValue > 100) {
+      Alert.alert('Lỗi', 'Giảm giá phải là số từ 1 đến 100.');
+      return false;
+    }
+    const minOrderValue = parseFloat(editVoucherData.minOrder.replace(/,/g, ''));
+    if (isNaN(minOrderValue) || minOrderValue < 0) {
+      Alert.alert('Lỗi', 'Đơn tối thiểu phải là số không âm.');
+      return false;
+    }
+    if (!editVoucherData.expiryDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+      Alert.alert('Lỗi', 'Ngày hết hạn phải có định dạng DD/MM/YYYY.');
+      return false;
+    }
+    return true;
+  };
+
   const saveVoucherChanges = () => {
-    if (
-      !editVoucherData.name ||
-      !editVoucherData.discount ||
-      !editVoucherData.minOrder ||
-      !editVoucherData.expiryDate
-    ) {
-      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin!');
+    if (!validateInputs()) {
       return;
     }
 
@@ -146,24 +162,25 @@ const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
     try {
       const updatedVoucher: Voucher = {
         _id: selectedVoucher._id,
-        name: editVoucherData.name,
+        name: editVoucherData.name.trim(),
         discount: `${parseFloat(editVoucherData.discount)}%`,
-        minOrder: `${parseFloat(editVoucherData.minOrder.replace(/,/g, ''))}đ`,
+        minOrder: `${parseFloat(editVoucherData.minOrder.replace(/,/g, '')).toLocaleString('vi-VN')}đ`,
         expiryDate: `HSD: ${editVoucherData.expiryDate}`,
         image: editVoucherData.image,
         status: 'pending',
       };
 
+      // Simulate sending voucher update request to admin
+      console.log('Sending voucher update request to admin:', updatedVoucher);
+
       setVouchers((prev) =>
-        prev.map((v) =>
-          v._id === selectedVoucher._id ? updatedVoucher : v
-        )
+        prev.map((v) => (v._id === selectedVoucher._id ? updatedVoucher : v))
       );
-      Alert.alert('Thành công', 'Voucher đã được cập nhật và gửi để phê duyệt.');
+      Alert.alert('Thành công', 'Yêu cầu cập nhật voucher đã được gửi để admin phê duyệt.');
       setShowEditVoucherModal(false);
     } catch (error) {
       console.error('Error updating voucher:', error);
-      Alert.alert('Lỗi', 'Không thể cập nhật voucher. Vui lòng thử lại.');
+      Alert.alert('Lỗi', 'Không thể gửi yêu cầu cập nhật voucher. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
@@ -177,12 +194,15 @@ const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
 
     setIsLoading(true);
     try {
+      // Simulate sending voucher deletion request to admin
+      console.log('Sending voucher deletion request to admin:', selectedVoucher);
+
       setVouchers((prev) => prev.filter((v) => v._id !== selectedVoucher._id));
-      Alert.alert('Thành công', 'Voucher đã được xóa.');
+      Alert.alert('Thành công', 'Yêu cầu xóa voucher đã được gửi để admin phê duyệt.');
       setShowEditVoucherModal(false);
     } catch (error) {
       console.error('Error deleting voucher:', error);
-      Alert.alert('Lỗi', 'Không thể xóa voucher. Vui lòng thử lại.');
+      Alert.alert('Lỗi', 'Không thể gửi yêu cầu xóa voucher. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
@@ -196,7 +216,7 @@ const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
       onRequestClose={() => setShowEditVoucherModal(false)}
     >
       <TouchableWithoutFeedback onPress={() => setShowEditVoucherModal(false)}>
- n        <View className="flex-1 justify-center items-center bg-black/50">
+        <View className="flex-1 justify-center items-center bg-black/50">
           <View
             className="bg-white rounded-lg overflow-hidden"
             style={{ width: 620, height: 620, maxWidth: '90%', maxHeight: '90%' }}
@@ -278,7 +298,7 @@ const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
                         Kích thước: {editVoucherImageSize.toFixed(2)} MB
                       </Text>
                       <TouchableOpacity
-                        onPress={() => {
+                        inPress={() => {
                           setEditVoucherData({ ...editVoucherData, image: null });
                           setEditVoucherImageSize(0);
                         }}
@@ -299,7 +319,7 @@ const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
               <ScrollView
                 className="w-2/3 pl-4"
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 20 }}
+                contentContainerStyle={{ paddingBottom: 20, paddingLeft: 20 }}
               >
                 <View style={{ marginBottom: 16 }}>
                   <Text
@@ -426,7 +446,7 @@ const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
                     disabled={isLoading}
                   >
                     <Text style={{ color: 'white', fontWeight: '500', fontSize: 14 }}>
-                      Lưu thay đổi
+                      Gửi Yêu Cầu
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -443,7 +463,7 @@ const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
                     disabled={isLoading}
                   >
                     <Text style={{ color: 'white', fontWeight: '500', fontSize: 14 }}>
-                      Xóa Voucher
+                      Yêu Cầu Xóa
                     </Text>
                   </TouchableOpacity>
                 </View>

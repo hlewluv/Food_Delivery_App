@@ -201,7 +201,7 @@ const AddDishModal: React.FC<AddDishModalProps> = ({
                 <ScrollView
                   className="w-2/3 pl-4"
                   showsVerticalScrollIndicator={false}
-                  contentContainerStyle={{ paddingBottom: 20 }}
+                  contentContainerStyle={{ paddingBottom: 20, paddingLeft: 20 }}
                 >
                   <View style={{ marginBottom: 16 }}>
                     <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
