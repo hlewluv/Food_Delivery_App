@@ -73,7 +73,7 @@ const VoucherScreen: React.FC = () => {
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="flex-row items-center p-4 bg-white shadow-md">
+      <View className="flex-row items-center p-4 bg-white">
         <TouchableOpacity
           onPress={() => router.back()}
           className="p-2"
@@ -87,7 +87,7 @@ const VoucherScreen: React.FC = () => {
       </View>
 
       {/* Voucher List */}
-      <ScrollView className="flex-1 px-4 py-6">
+      <ScrollView className="flex-1 px-4 py-6 bg-white">
         <View className="flex-row justify-between items-center mb-6">
           <Text className="text-2xl font-semibold text-gray-900">
             Voucher Nhà Hàng

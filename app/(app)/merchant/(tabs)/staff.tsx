@@ -53,9 +53,9 @@ const StaffScreen: React.FC = () => {
   }, [staffList]);
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-white">
       {/* Header */}
-      <View className="flex-row items-center p-4 bg-white shadow-md">
+      <View className="flex-row items-center p-4 bg-white">
         <TouchableOpacity onPress={() => router.back()} className="p-2" accessibilityLabel="Quay lại">
           <Ionicons name="arrow-back" size={24} color="#4B5563" />
         </TouchableOpacity>
