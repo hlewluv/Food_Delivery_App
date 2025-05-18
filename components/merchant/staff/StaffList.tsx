@@ -104,7 +104,6 @@ const StaffList: React.FC<StaffListProps> = ({
       setStaffToDelete(null);
     } catch (error) {
       console.error('Error deleting staff:', error);
-      Alert.alert('Lỗi', 'Không thể xóa nhân viên. Vui lòng thử lại.');
     } finally {
       setTimeout(() => {
         console.log('Clearing isLoading after delete');
@@ -151,7 +150,7 @@ const StaffList: React.FC<StaffListProps> = ({
             : 'Quản lý'}
         </Text>
         <Text className="w-36 p-3 text-gray-600 text-center">{staff.phone}</Text>
-        <Text className="w-56 p-3 text-gray-600 text-center">{summarizeSchedule(staff.schedule)}</Text>
+        <Text className="w-72 p-3 text-gray-600 text-center">{summarizeSchedule(staff.schedule)}</Text>
         <TouchableOpacity
           onPress={() => toggleLeaveStatus(staff)}
           disabled={!canToggleStatus || isLoading}
@@ -185,7 +184,7 @@ const StaffList: React.FC<StaffListProps> = ({
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => handleDeleteStaff(staff)}
-            className="bg-red-600 px-2 py-1 rounded mr-1"
+            className="bg-red-500 px-2 py-1 rounded mr-1"
             disabled={isLoading}
             accessibilityLabel={`Xóa nhân viên ${staff.name}`}
           >
@@ -206,7 +205,7 @@ const StaffList: React.FC<StaffListProps> = ({
             <Text className="w-20 p-3 font-semibold text-gray-700 text-center">Ảnh</Text>
             <Text className="w-28 p-3 font-semibold text-gray-700 text-center">Vai trò</Text>
             <Text className="w-36 p-3 font-semibold text-gray-700 text-center">Số điện thoại</Text>
-            <Text className="w-56 p-3 font-semibold text-gray-700 text-center">Lịch làm việc</Text>
+            <Text className="w-72 p-3 font-semibold text-gray-700 text-center">Lịch làm việc</Text>
             <Text className="w-36 p-3 font-semibold text-gray-700 text-center">Trạng thái</Text>
             <Text className="w-56 p-3 font-semibold text-gray-700 text-center">Hành động</Text>
           </View>
