@@ -1,4 +1,3 @@
-// Trong thư mục merchant, ví dụ: app/(app)/merchant/messages.js
 import React from 'react';
 import { View, Text } from 'react-native';
 import MessageScreen from 'app/(app)/(shared)/messages'; // Import từ shared

@@ -262,21 +262,16 @@ const Order = () => {
     <>
       <ScrollView className='bg-white flex-1 px-4'>
         {/* Header */}
-        <View className='bg-white px-3 pt-5 pb-3'>
-          <View className='flex-row justify-between items-center'>
-            <TouchableOpacity onPress={() => router.back()} className='mr-4'>
-              <Ionicons name='arrow-back' size={28} color='gray' />
-            </TouchableOpacity>
-            <Text className='text-xl font-bold'>Đơn hàng</Text>
-            <View className='flex-row items-center'>
-              <TouchableOpacity className='mr-2'>
-                <Feather name='filter' size={20} color='#6b7280' />
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Feather name='search' size={20} color='#6b7280' />
-              </TouchableOpacity>
-            </View>
-          </View>
+        <View className='flex-row items-center p-4 bg-white'>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className='p-2'
+            accessibilityLabel='Quay lại'>
+            <Ionicons name='arrow-back' size={24} color='#4B5563' />
+          </TouchableOpacity>
+          <Text className='flex-1 text-center text-xl font-bold text-gray-900'>
+            Đơn hàng
+          </Text>
         </View>
 
         {/* Tabs */}

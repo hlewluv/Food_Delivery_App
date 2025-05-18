@@ -1,173 +1,188 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, Text, Modal, ActivityIndicator, TextInput } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import MenuList from '@/components/merchant/menu/MenuList';
-import OptionGroupsList from '@/components/merchant/menu/OptionGroupsList';
-import Modals from '@/components/merchant/menu/Modals';
-import * as ApiService from '@/components/merchant/menu/ApiService';
+import React, { useState, useEffect } from 'react'
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Text,
+  Modal,
+  ActivityIndicator,
+  TextInput
+} from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import { router } from 'expo-router'
+import MenuList from '@/components/merchant/menu/MenuList'
+import OptionGroupsList from '@/components/merchant/menu/OptionGroupsList'
+import Modals from '@/components/merchant/menu/Modals'
+import * as ApiService from '@/components/merchant/menu/ApiService'
 
 const MenuScreen = () => {
-  const [selectedTab, setSelectedTab] = useState('Có sẵn');
-  const [categories, setCategories] = useState([]);
-  const [optionGroups, setOptionGroups] = useState([]);
-  const [expandedCategories, setExpandedCategories] = useState([]);
-  const [expandedOptionGroups, setExpandedOptionGroups] = useState([]);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
-  const [showEditOptionGroupModal, setShowEditOptionGroupModal] = useState(false);
-  const [showAddDishModal, setShowAddDishModal] = useState(false);
-  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
-  const [showAddOptionGroupModal, setShowAddOptionGroupModal] = useState(false);
-  const [selectedDish, setSelectedDish] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedOptionGroup, setSelectedOptionGroup] = useState(null);
-  const [editCategoryName, setEditCategoryName] = useState('');
+  const [selectedTab, setSelectedTab] = useState('Có sẵn')
+  const [categories, setCategories] = useState([])
+  const [optionGroups, setOptionGroups] = useState([])
+  const [expandedCategories, setExpandedCategories] = useState([])
+  const [expandedOptionGroups, setExpandedOptionGroups] = useState([])
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showEditCategoryModal, setShowEditCategoryModal] = useState(false)
+  const [showEditOptionGroupModal, setShowEditOptionGroupModal] = useState(false)
+  const [showAddDishModal, setShowAddDishModal] = useState(false)
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false)
+  const [showAddOptionGroupModal, setShowAddOptionGroupModal] = useState(false)
+  const [selectedDish, setSelectedDish] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [selectedOptionGroup, setSelectedOptionGroup] = useState(null)
+  const [editCategoryName, setEditCategoryName] = useState('')
   const [editDishData, setEditDishData] = useState({
     name: '',
     description: '',
     price: '',
     available: true,
-    image:
-      'https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png?20210521171500',
-    optionGroups: [],
-  });
+    image: 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png?20210521171500',
+    optionGroups: []
+  })
   const [editOptionGroupData, setEditOptionGroupData] = useState({
     groupName: '',
-    options: [],
-  });
+    options: []
+  })
   const [addDishData, setAddDishData] = useState({
     name: '',
     description: '',
     price: '',
     category: '',
-    image:
-      'https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png?20210521171500',
-    optionGroups: [],
-  });
-  const [addCategoryName, setAddCategoryName] = useState('');
+    image: 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png?20210521171500',
+    optionGroups: []
+  })
+  const [addCategoryName, setAddCategoryName] = useState('')
   const [addOptionGroupData, setAddOptionGroupData] = useState({
     groupName: '',
-    options: [{ name: '', price: '' }],
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [permissionDenied, setPermissionDenied] = useState(false);
+    options: [{ name: '', price: '' }]
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [permissionDenied, setPermissionDenied] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
+      setIsLoading(true)
       try {
-        const fetchedCategories = await ApiService.fetchCategories();
-        const fetchedOptionGroups = await ApiService.fetchOptionGroups();
-        setCategories(fetchedCategories);
-        setOptionGroups(fetchedOptionGroups);
+        const fetchedCategories = await ApiService.fetchCategories()
+        const fetchedOptionGroups = await ApiService.fetchOptionGroups()
+        setCategories(fetchedCategories)
+        setOptionGroups(fetchedOptionGroups)
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching data:', error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
-    fetchData();
-  }, []);
+    }
+    fetchData()
+  }, [])
 
-  const toggleCategory = (categoryName) => {
-    setExpandedCategories((prev) =>
-      prev.includes(categoryName) ? prev.filter((name) => name !== categoryName) : [...prev, categoryName]
-    );
-  };
+  const toggleCategory = categoryName => {
+    setExpandedCategories(prev =>
+      prev.includes(categoryName)
+        ? prev.filter(name => name !== categoryName)
+        : [...prev, categoryName]
+    )
+  }
 
-  const toggleOptionGroup = (groupName) => {
-    setExpandedOptionGroups((prev) =>
-      prev.includes(groupName) ? prev.filter((name) => name !== groupName) : [...prev, groupName]
-    );
-  };
+  const toggleOptionGroup = groupName => {
+    setExpandedOptionGroups(prev =>
+      prev.includes(groupName) ? prev.filter(name => name !== groupName) : [...prev, groupName]
+    )
+  }
 
   const handleDishPress = (categoryIndex, dishIndex) => {
-    const dish = categories[categoryIndex].dishes[dishIndex];
-    setSelectedDish({ categoryIndex, dishIndex });
-    setEditDishData({ ...dish });
-    setShowEditModal(true);
-  };
+    const dish = categories[categoryIndex].dishes[dishIndex]
+    setSelectedDish({ categoryIndex, dishIndex })
+    setEditDishData({ ...dish })
+    setShowEditModal(true)
+  }
 
-  const handleEditCategoryPress = (categoryIndex) => {
-    setSelectedCategory(categoryIndex);
-    setEditCategoryName(categories[categoryIndex].name);
-    setShowEditCategoryModal(true);
-  };
+  const handleEditCategoryPress = categoryIndex => {
+    setSelectedCategory(categoryIndex)
+    setEditCategoryName(categories[categoryIndex].name)
+    setShowEditCategoryModal(true)
+  }
 
-  const handleEditOptionGroup = (groupIndex) => {
-    setSelectedOptionGroup(groupIndex);
-    setEditOptionGroupData({ ...optionGroups[groupIndex] });
-    setShowEditOptionGroupModal(true);
-  };
+  const handleEditOptionGroup = groupIndex => {
+    setSelectedOptionGroup(groupIndex)
+    setEditOptionGroupData({ ...optionGroups[groupIndex] })
+    setShowEditOptionGroupModal(true)
+  }
 
   const handleAddOptionGroup = async () => {
-    if (!addOptionGroupData.groupName || addOptionGroupData.options.some(opt => !opt.name || !opt.price)) {
-      alert('Vui lòng điền đầy đủ tên nhóm và ít nhất một tùy chọn hợp lệ');
-      return;
+    if (
+      !addOptionGroupData.groupName ||
+      addOptionGroupData.options.some(opt => !opt.name || !opt.price)
+    ) {
+      alert('Vui lòng điền đầy đủ tên nhóm và ít nhất một tùy chọn hợp lệ')
+      return
     }
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const result = await ApiService.addOptionGroup(addOptionGroupData);
-      setOptionGroups(result.optionGroups);
-      setAddOptionGroupData({ groupName: '', options: [{ name: '', price: '' }] });
-      setShowAddOptionGroupModal(false);
+      const result = await ApiService.addOptionGroup(addOptionGroupData)
+      setOptionGroups(result.optionGroups)
+      setAddOptionGroupData({ groupName: '', options: [{ name: '', price: '' }] })
+      setShowAddOptionGroupModal(false)
     } catch (error) {
-      alert('Không thể thêm nhóm tùy chọn');
+      alert('Không thể thêm nhóm tùy chọn')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const addOptionField = () => {
     setAddOptionGroupData({
       ...addOptionGroupData,
-      options: [...addOptionGroupData.options, { name: '', price: '' }],
-    });
-  };
+      options: [...addOptionGroupData.options, { name: '', price: '' }]
+    })
+  }
 
   const updateOptionField = (index, field, value) => {
-    const newOptions = [...addOptionGroupData.options];
-    newOptions[index] = { ...newOptions[index], [field]: value };
-    setAddOptionGroupData({ ...addOptionGroupData, options: newOptions });
-  };
+    const newOptions = [...addOptionGroupData.options]
+    newOptions[index] = { ...newOptions[index], [field]: value }
+    setAddOptionGroupData({ ...addOptionGroupData, options: newOptions })
+  }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className='flex-1 bg-white'>
       {/* Header */}
-      <View className="flex-row items-center p-4 bg-white">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Ionicons name="arrow-back" size={28} color="gray" />
+      <View className='flex-row items-center p-4 bg-white'>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className='p-2'
+          accessibilityLabel='Quay lại'>
+          <Ionicons name='arrow-back' size={24} color='#4B5563' />
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-2xl font-semibold text-gray-800">Thực đơn</Text>
+        <Text className='flex-1 text-center text-xl font-bold text-gray-900'>
+          Thực đơn
+        </Text>
       </View>
       {/* Tabs */}
-      <View className="flex-row border-b border-gray-200">
-        {['Có sẵn', 'Tuỳ chọn nhóm'].map((tab) => (
+      <View className='flex-row border-b border-gray-200'>
+        {['Có sẵn', 'Tuỳ chọn nhóm'].map(tab => (
           <TouchableOpacity
             key={tab}
-            className={`flex-1 p-3 pb-3 ${selectedTab === tab ? 'border-b-2 border-green-600' : ''}`}
-            onPress={() => setSelectedTab(tab)}
-          >
+            className={`flex-1 p-3 pb-3 ${
+              selectedTab === tab ? 'border-b-2 border-green-600' : ''
+            }`}
+            onPress={() => setSelectedTab(tab)}>
             <Text
               className={`text-center font-medium text-xl ${
                 selectedTab === tab ? 'text-green-600' : 'text-gray-800'
-              }`}
-            >
+              }`}>
               {tab}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
-      
-      <ScrollView className="flex-1 pt-5">
+
+      <ScrollView className='flex-1 pt-5'>
         {selectedTab === 'Có sẵn' && (
-          <View className="flex-row justify-end items-center px-4 mb-2">
+          <View className='flex-row justify-end items-center px-4 mb-2'>
             <TouchableOpacity
               onPress={() => setShowAddDishModal(true)}
-              className="bg-green-600 p-3 rounded-lg"
-            >
-              <Ionicons name="add" size={24} color="white" />
+              className='bg-green-600 p-3 rounded-lg'>
+              <Ionicons name='add' size={24} color='white' />
             </TouchableOpacity>
           </View>
         )}
@@ -182,12 +197,11 @@ const MenuScreen = () => {
           />
         )}
         {selectedTab === 'Tuỳ chọn nhóm' && (
-          <View className="flex-row justify-end items-center px-4 mb-2">
+          <View className='flex-row justify-end items-center px-4 mb-2'>
             <TouchableOpacity
               onPress={() => setShowAddOptionGroupModal(true)}
-              className="bg-green-600 p-3 rounded-lg"
-            >
-              <Ionicons name="add" size={24} color="white" />
+              className='bg-green-600 p-3 rounded-lg'>
+              <Ionicons name='add' size={24} color='white' />
             </TouchableOpacity>
           </View>
         )}
@@ -240,54 +254,51 @@ const MenuScreen = () => {
         setPermissionDenied={setPermissionDenied}
       />
       {/* Add Option Group Modal */}
-      <Modal visible={showAddOptionGroupModal} animationType="slide" transparent>
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white rounded-lg p-6 w-11/12 max-w-md">
-            <Text className="text-xl font-semibold mb-4">Thêm nhóm tùy chọn mới</Text>
+      <Modal visible={showAddOptionGroupModal} animationType='slide' transparent>
+        <View className='flex-1 justify-center items-center bg-black/50'>
+          <View className='bg-white rounded-lg p-6 w-11/12 max-w-md'>
+            <Text className='text-xl font-semibold mb-4'>Thêm nhóm tùy chọn mới</Text>
             <TextInput
-              className="border border-gray-300 rounded-lg p-2 mb-3"
-              placeholder="Tên nhóm tùy chọn"
+              className='border border-gray-300 rounded-lg p-2 mb-3'
+              placeholder='Tên nhóm tùy chọn'
               value={addOptionGroupData.groupName}
-              onChangeText={(text) => setAddOptionGroupData({ ...addOptionGroupData, groupName: text })}
+              onChangeText={text =>
+                setAddOptionGroupData({ ...addOptionGroupData, groupName: text })
+              }
             />
             {addOptionGroupData.options.map((option, index) => (
-              <View key={index} className="mb-3">
+              <View key={index} className='mb-3'>
                 <TextInput
-                  className="border border-gray-300 rounded-lg p-2 mb-1"
-                  placeholder="Tên tùy chọn"
+                  className='border border-gray-300 rounded-lg p-2 mb-1'
+                  placeholder='Tên tùy chọn'
                   value={option.name}
-                  onChangeText={(text) => updateOptionField(index, 'name', text)}
+                  onChangeText={text => updateOptionField(index, 'name', text)}
                 />
                 <TextInput
-                  className="border border-gray-300 rounded-lg p-2"
-                  placeholder="Giá (VD: 10000)"
+                  className='border border-gray-300 rounded-lg p-2'
+                  placeholder='Giá (VD: 10000)'
                   value={option.price}
-                  keyboardType="numeric"
-                  onChangeText={(text) => updateOptionField(index, 'price', text)}
+                  keyboardType='numeric'
+                  onChangeText={text => updateOptionField(index, 'price', text)}
                 />
               </View>
             ))}
-            <TouchableOpacity
-              onPress={addOptionField}
-              className="bg-gray-200 p-2 rounded-lg mb-3"
-            >
-              <Text className="text-center text-gray-800">+ Thêm tùy chọn</Text>
+            <TouchableOpacity onPress={addOptionField} className='bg-gray-200 p-2 rounded-lg mb-3'>
+              <Text className='text-center text-gray-800'>+ Thêm tùy chọn</Text>
             </TouchableOpacity>
-            <View className="flex-row justify-end mt-4">
+            <View className='flex-row justify-end mt-4'>
               <TouchableOpacity
                 onPress={() => setShowAddOptionGroupModal(false)}
-                className="px-4 py-2 mr-2"
-              >
-                <Text className="text-gray-600">Hủy</Text>
+                className='px-4 py-2 mr-2'>
+                <Text className='text-gray-600'>Hủy</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleAddOptionGroup}
-                className="bg-green-600 px-4 py-2 rounded-lg"
-              >
+                className='bg-green-600 px-4 py-2 rounded-lg'>
                 {isLoading ? (
-                  <ActivityIndicator color="white" />
+                  <ActivityIndicator color='white' />
                 ) : (
-                  <Text className="text-white">Thêm</Text>
+                  <Text className='text-white'>Thêm</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -295,7 +306,7 @@ const MenuScreen = () => {
         </View>
       </Modal>
     </View>
-  );
-};
+  )
+}
 
-export default MenuScreen;
+export default MenuScreen
