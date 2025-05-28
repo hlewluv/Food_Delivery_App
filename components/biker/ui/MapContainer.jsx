@@ -6,7 +6,7 @@ import MapViewDirections from '@/components/biker/map/MapViewDirections';
 import { Ionicons } from '@expo/vector-icons';
 
 // Sử dụng biến môi trường cho API key (nên thay thế trong production)
-const GOOGLE_MAPS_APIKEY = process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyDG7TVVWYdKGDtGhxlmbzlT2Db9qUXZLho';
+const GOOGLE_MAPS_APIKEY = process.env.GOOGLE_MAPS_API_KEY || '';
 
 const MapContainer = ({ 
   mapRef, 
