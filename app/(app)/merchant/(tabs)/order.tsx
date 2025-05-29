@@ -11,6 +11,8 @@ interface MenuItem {
   restaurant?: string
   image?: any
   description?: string
+  time?: string
+  option_menu?: string[][]
 }
 
 interface Order {
@@ -23,158 +25,53 @@ interface Order {
   items: { item: MenuItem; quantity: number }[]
 }
 
+// Import transactionData
+import transactionData from '@/data/transactions' // Đảm bảo đường dẫn đúng đến file transactionData.js
+
 const Order = () => {
-  const tabs = ['Đang chuẩn bị', 'Sẵn sàng', 'Sắp tới', 'Lịch sử']
+  const tabs = ['Chờ xác nhận', 'Đang chuẩn bị', 'Sẵn sàng', 'Lịch sử']
 
   // State to manage the active tab
-  const [activeTab, setActiveTab] = useState('Đang chuẩn bị')
+  const [activeTab, setActiveTab] = useState('Chờ xác nhận')
 
   // State to manage which order's details are being viewed
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
 
+  // Transform transactionData to match Order interface
+  const transformTransactionData = (data) => {
+    return data.map((transaction) => ({
+      id: transaction.id,
+      customerName: transaction.customer.name,
+      bikerName: transaction.biker.name,
+      bikerAvatar: 'https://via.placeholder.com/50', // Placeholder avatar
+      time: transaction.time,
+      status: transaction.status === 'Hoàn tất' ? 'Lịch sử' : transaction.status === 'Đang giao' ? 'Sẵn sàng' : transaction.status,
+      items: transaction.items.map((item) => ({
+        item: {
+          id: item.id,
+          name: item.food_name,
+          price: `${item.price.toLocaleString('vi-VN')}đ`,
+          restaurant: transaction.restaurant.name,
+          image: item.image,
+          description: item.description,
+          time: item.time,
+          option_menu: item.option_menu
+        },
+        quantity: 1 // Default quantity, adjust if needed
+      }))
+    }))
+  }
+
   // State to manage orders
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: 'GF-001',
-      customerName: 'Hatta',
-      bikerName: 'Rizki Medan',
-      bikerAvatar:
-        'https://vcdn1-giaitri.vnecdn.net/2025/03/19/jisoo-1-1742349532-1742349698-5135-1742349805.jpg?w=1200&h=0&q=100&dpr=1&fit=crop&s=hGqSXJnPiHy3r6XbGozF2Q',
-      time: '10 phút',
-      status: 'Đang chuẩn bị',
-      items: [
-        {
-          item: {
-            id: '1-1-1',
-            name: 'Big Mac',
-            price: '49.000đ',
-            restaurant: "McDonald's",
-            description: 'Bánh burger với 2 miếng thịt bò, sốt đặc biệt, rau sống tươi ngon',
-            image: 29
-          },
-          quantity: 1
-        },
-        {
-          item: {
-            id: '1-1-2',
-            name: 'Cheeseburger',
-            price: '29.000đ',
-            restaurant: "McDonald's",
-            description: 'Bánh burger phô mai cổ điển',
-            image: 29
-          },
-          quantity: 1
-        }
-      ]
-    },
-    {
-      id: 'GF-002',
-      customerName: 'Hatta',
-      bikerName: 'Rizki Medan',
-      bikerAvatar:
-        'https://vcdn1-giaitri.vnecdn.net/2025/03/19/jisoo-1-1742349532-1742349698-5135-1742349805.jpg?w=1200&h=0&q=100&dpr=1&fit=crop&s=hGqSXJnPiHy3r6XbGozF2Q',
-      time: '10 phút',
-      status: 'Sẵn sàng',
-      items: [
-        {
-          item: {
-            id: '1-1-1',
-            name: 'Big Mac',
-            price: '49.000đ',
-            restaurant: "McDonald's",
-            description: 'Bánh burger với 2 miếng thịt bò, sốt đặc biệt, rau sống tươi ngon',
-            image: 29
-          },
-          quantity: 1
-        },
-        {
-          item: {
-            id: '1-1-2',
-            name: 'Cheeseburger',
-            price: '29.000đ',
-            restaurant: "McDonald's",
-            description: 'Bánh burger phô mai cổ điển',
-            image: 29
-          },
-          quantity: 1
-        }
-      ]
-    },
-    {
-      id: 'GF-003',
-      customerName: 'Hatta',
-      bikerName: 'Rizki Medan',
-      bikerAvatar:
-        'https://vcdn1-giaitri.vnecdn.net/2025/03/19/jisoo-1-1742349532-1742349698-5135-1742349805.jpg?w=1200&h=0&q=100&dpr=1&fit=crop&s=hGqSXJnPiHy3r6XbGozF2Q',
-      time: '10 phút',
-      status: 'Sắp tới',
-      items: [
-        {
-          item: {
-            id: '1-1-1',
-            name: 'Big Mac',
-            price: '49.000đ',
-            restaurant: "McDonald's",
-            description: 'Bánh burger với 2 miếng thịt bò, sốt đặc biệt, rau sống tươi ngon',
-            image: 29
-          },
-          quantity: 1
-        },
-        {
-          item: {
-            id: '1-1-2',
-            name: 'Cheeseburger',
-            price: '29.000đ',
-            restaurant: "McDonald's",
-            description: 'Bánh burger phô mai cổ điển',
-            image: 29
-          },
-          quantity: 1
-        }
-      ]
-    },
-    {
-      id: 'GF-004',
-      customerName: 'Hatta',
-      bikerName: 'Rizki Medan',
-      bikerAvatar:
-        'https://vcdn1-giaitri.vnecdn.net/2025/03/19/jisoo-1-1742349532-1742349698-5135-1742349805.jpg?w=1200&h=0&q=100&dpr=1&fit=crop&s=hGqSXJnPiHy3r6XbGozF2Q',
-      time: '10 phút',
-      status: 'Lịch sử',
-      items: [
-        {
-          item: {
-            id: '1-1-1',
-            name: 'Big Mac',
-            price: '49.000đ',
-            restaurant: "McDonald's",
-            description: 'Bánh burger với 2 miếng thịt bò, sốt đặc biệt, rau sống tươi ngon',
-            image: 29
-          },
-          quantity: 1
-        },
-        {
-          item: {
-            id: '1-1-2',
-            name: 'Cheeseburger',
-            price: '29.000đ',
-            restaurant: "McDonald's",
-            description: 'Bánh burger phô mai cổ điển',
-            image: 29
-          },
-          quantity: 1
-        }
-      ]
-    }
-  ])
+  const [orders, setOrders] = useState<Order[]>(transformTransactionData(transactionData))
 
   // Function to move an order to the next tab
   const moveToNextTab = (orderId: string) => {
-    setOrders(prevOrders => {
-      return prevOrders.map(order => {
-        if (order.id === orderId) {
+    setOrders((prevOrders) => {
+      return prevOrders.map((order) => {
+        if (order.id === orderId && order.status !== 'Lịch sử') {
           const currentTabIndex = tabs.indexOf(order.status)
-          const nextTabIndex = (currentTabIndex + 1) % tabs.length // Loop back to first tab if at the end
+          const nextTabIndex = currentTabIndex + 1 // Move to next tab
           return { ...order, status: tabs[nextTabIndex] }
         }
         return order
@@ -183,7 +80,7 @@ const Order = () => {
   }
 
   // Filter orders based on the active tab
-  const filteredOrders = orders.filter(order => order.status === activeTab)
+  const filteredOrders = orders.filter((order) => order.status === activeTab)
 
   // Calculate total items for display
   const getTotalItems = (items: { item: MenuItem; quantity: number }[]) => {
@@ -209,7 +106,7 @@ const Order = () => {
 
   // Handle status button press
   const handleStatusPress = (order: Order) => {
-    if (activeTab !== 'Lịch sử') {
+    if (order.status !== 'Lịch sử') {
       moveToNextTab(order.id)
     }
   }
@@ -246,6 +143,12 @@ const Order = () => {
           <View key={index} className='flex-row justify-between py-2 border-b border-gray-200'>
             <Text className='text-base text-gray-600 flex-1'>
               {item.name} x{quantity}
+              {item.option_menu && item.option_menu.length > 0 && (
+                <Text className='text-sm text-gray-500'>
+                  {' '}
+                  ({item.option_menu.map((options) => options.join('/')).join(', ')})
+                </Text>
+              )}
             </Text>
             <Text className='text-base text-gray-600 font-medium'>{item.price}</Text>
           </View>
@@ -262,21 +165,16 @@ const Order = () => {
     <>
       <ScrollView className='bg-white flex-1 px-4'>
         {/* Header */}
-        <View className='bg-white px-3 pt-5 pb-3'>
-          <View className='flex-row justify-between items-center'>
-            <TouchableOpacity onPress={() => router.back()} className='mr-4'>
-              <Ionicons name='arrow-back' size={28} color='gray' />
-            </TouchableOpacity>
-            <Text className='text-xl font-bold'>Đơn hàng</Text>
-            <View className='flex-row items-center'>
-              <TouchableOpacity className='mr-2'>
-                <Feather name='filter' size={20} color='#6b7280' />
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Feather name='search' size={20} color='#6b7280' />
-              </TouchableOpacity>
-            </View>
-          </View>
+        <View className='flex-row items-center p-4 bg-white'>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className='p-2'
+            accessibilityLabel='Quay lại'>
+            <Ionicons name='arrow-back' size={24} color='#4B5563' />
+          </TouchableOpacity>
+          <Text className='flex-1 text-center text-xl font-bold text-gray-900'>
+            Đơn hàng
+          </Text>
         </View>
 
         {/* Tabs */}
@@ -285,7 +183,7 @@ const Order = () => {
           showsHorizontalScrollIndicator={false}
           className='bg-white px-3 py-2 border-b border-gray-200'>
           <View className='flex-row space-x-2'>
-            {tabs.map(tab => (
+            {tabs.map((tab) => (
               <View className='p-1' key={tab}>
                 <TouchableOpacity
                   onPress={() => setActiveTab(tab)}
@@ -307,7 +205,7 @@ const Order = () => {
         {/* Order List */}
         <View className='bg-white px-3 py-4'>
           {filteredOrders.length > 0 ? (
-            filteredOrders.map(order => (
+            filteredOrders.map((order) => (
               <TouchableOpacity
                 key={order.id}
                 onPress={() => handleOrderPress(order)}
@@ -327,34 +225,35 @@ const Order = () => {
                 </View>
                 <View className='flex-col items-end'>
                   <Text className='text-base text-gray-500 mb-2'>{order.time}</Text>
-                  <View className='bg-gray-100 rounded-lg p-2 flex-col items-end mt-4 h-12 w-28 justify-center items-center'>
+                  <View className='bg-gray-100 rounded-lg p-2 flex-col mt-4 h-12 w-36 justify-center items-center'>
                     <TouchableOpacity
-                      onPress={e => {
+                      onPress={(e) => {
                         e.stopPropagation() // Prevent parent TouchableOpacity from triggering
                         handleStatusPress(order)
                       }}
-                      className='flex-row items-center'>
+                      className='flex-row items-center'
+                      disabled={order.status === 'Lịch sử'}>
                       <Feather
                         name='check'
                         size={18}
                         color={
-                          order.status === 'Đang chuẩn bị'
+                          order.status === 'Chờ xác nhận'
+                            ? '#f97316' // Orange for "Chờ xác nhận"
+                            : order.status === 'Đang chuẩn bị'
                             ? '#3b82f6' // Blue for "Đang chuẩn bị"
                             : order.status === 'Sẵn sàng'
                             ? '#22c55e' // Green for "Sẵn sàng"
-                            : order.status === 'Sắp tới'
-                            ? '#f59e0b' // Yellow for "Sắp tới"
                             : '#6b7280' // Gray for "Lịch sử"
                         }
                       />
                       <Text
                         className={`ml-1 text-sm font-medium ${
-                          order.status === 'Đang chuẩn bị'
+                          order.status === 'Chờ xác nhận'
+                            ? 'text-orange-500'
+                            : order.status === 'Đang chuẩn bị'
                             ? 'text-blue-500'
                             : order.status === 'Sẵn sàng'
                             ? 'text-green-500'
-                            : order.status === 'Sắp tới'
-                            ? 'text-yellow-500'
                             : 'text-gray-500'
                         }`}>
                         {order.status}

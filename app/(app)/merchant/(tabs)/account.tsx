@@ -13,6 +13,79 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
+const ProfileModal = ({ visible, onClose, restaurant }) => {
+  return (
+    <Modal
+      transparent={true}
+      visible={visible}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <TouchableWithoutFeedback>
+            <View className="bg-white p-4 rounded-2xl w-1/2 shadow-lg">
+              <Text className="text-xl font-bold text-gray-900 mb-3">Hồ sơ quán</Text>
+              
+              {/* Restaurant Image */}
+              <Image
+                source={{ uri: restaurant.image }}
+                className="w-full h-32 rounded-xl mb-3 border border-gray-200 shadow-md"
+                resizeMode="cover"
+              />
+              
+              {/* Restaurant Name */}
+              <View className="mb-3">
+                <Text className="text-base font-semibold text-gray-800">Tên quán</Text>
+                <Text className="text-gray-600 text-sm">{restaurant.name}</Text>
+              </View>
+              
+              {/* Establishment Date */}
+              <View className="mb-3">
+                <Text className="text-base font-semibold text-gray-800">Ngày thành lập</Text>
+                <Text className="text-gray-600 text-sm">{restaurant.established || '01/01/2020'}</Text>
+              </View>
+              
+              {/* Rating */}
+              <View className="mb-3">
+                <Text className="text-base font-semibold text-gray-800">Đánh giá</Text>
+                <View className="flex-row items-center">
+                  {[...Array(5)].map((_, index) => (
+                    <Ionicons
+                      key={index}
+                      name={index < (restaurant.rating || 4) ? 'star' : 'star-outline'}
+                      size={16}
+                      color="#FFD700"
+                    />
+                  ))}
+                  <Text className="ml-1 text-gray-600 text-sm">
+                    {restaurant.rating || 4}.0 ({restaurant.reviews || 120} lượt đánh giá)
+                  </Text>
+                </View>
+              </View>
+              
+              {/* Services */}
+              <View className="mb-3">
+                <Text className="text-base font-semibold text-gray-800">Dịch vụ</Text>
+                <Text className="text-gray-600 text-sm">{restaurant.services}</Text>
+              </View>
+              
+              {/* Close Button */}
+              <TouchableOpacity
+                onPress={onClose}
+                className="bg-[#00b14f] px-4 py-2 rounded-full mt-3"
+                accessibilityLabel="Đóng hồ sơ"
+              >
+                <Text className="text-white font-semibold text-center text-sm">Đóng</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+};
+
 const ProfileScreen = () => {
   const [restaurant, setRestaurant] = useState({
     name: 'Coffee Cafe, Ho Chi Minh',
@@ -22,6 +95,9 @@ const ProfileScreen = () => {
     phone: '+84 8 38',
     email: 'contact@coffeecafe.com',
     services: 'GrabFood • GrabPay',
+    established: '01/01/2020',
+    rating: 4,
+    reviews: 120,
     workingHours: {
       Monday: '07:00 - 22:00',
       Tuesday: '07:00 - 22:00',
@@ -35,6 +111,7 @@ const ProfileScreen = () => {
   const [workingHoursModalVisible, setWorkingHoursModalVisible] = useState(false);
   const [contactModalVisible, setContactModalVisible] = useState(false);
   const [addressModalVisible, setAddressModalVisible] = useState(false);
+  const [profileModalVisible, setProfileModalVisible] = useState(false);
 
   // Temporary form data states
   const [tempWorkingHours, setTempWorkingHours] = useState(restaurant.workingHours);
@@ -54,10 +131,6 @@ const ProfileScreen = () => {
     Linking.openURL(
       `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address)}`
     );
-  };
-
-  const onProfilePress = () => {
-    router.push('/profile/edit');
   };
 
   // Handle Working Hours Save
@@ -117,11 +190,11 @@ const ProfileScreen = () => {
               {restaurant.services && <Text className="text-gray-500">{restaurant.services}</Text>}
             </View>
             <TouchableOpacity
-                  className="px-3 py-2 bg-white rounded-full border border-gray-300 self-start shadow-sm active:bg-gray-50"
-                  onPress={onProfilePress}
-                >
-                  <Text className="text-gray-700 font-medium text-sm">Hồ sơ</Text>
-                </TouchableOpacity>
+              className="px-3 py-2 bg-white rounded-full border border-gray-300 self-start shadow-sm active:bg-gray-50"
+              onPress={() => setProfileModalVisible(true)}
+            >
+              <Text className="text-gray-700 font-medium text-sm">Hồ sơ</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -209,6 +282,13 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Profile Modal */}
+      <ProfileModal
+        visible={profileModalVisible}
+        onClose={() => setProfileModalVisible(false)}
+        restaurant={restaurant}
+      />
 
       {/* Working Hours Modal */}
       <Modal
