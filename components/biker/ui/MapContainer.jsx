@@ -1,37 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import MapView from '@/components/biker/map/MapView';
+import Marker from '@/components/biker/map/Marker';
+import MapViewDirections from '@/components/biker/map/MapViewDirections'; // Updated import
 import { Ionicons } from '@expo/vector-icons';
 
-const GOONG_API_KEY = 'JvtUliVy2MWCKYpI89KrJ9QDLRfES4JYkKcw0srO';
-
-// Stitching pattern for routes
-const createStitchedCoordinates = (coordinates) => {
-  const stitchedCoordinates = [];
-  for (let i = 0; i < coordinates.length - 1; i++) {
-    const start = coordinates[i];
-    const end = coordinates[i + 1];
-    const distance = Math.sqrt(
-      Math.pow(end.latitude - start.latitude, 2) +
-      Math.pow(end.longitude - start.longitude, 2)
-    );
-    const segments = Math.max(2, Math.floor(distance * 1000)); // Adjust segment density
-    
-    for (let j = 0; j < segments; j++) {
-      const fraction = j / segments;
-      stitchedCoordinates.push({
-        latitude: start.latitude + (end.latitude - start.latitude) * fraction,
-        longitude: start.longitude + (end.longitude - start.longitude) * fraction,
-      });
-    }
-  }
-  return stitchedCoordinates;
-};
+const GOOGLE_MAPS_APIKEY = 'YOUR_GOOGLE_MAPS_API_KEY'; // Replace with your actual API key
 
 const MapContainer = ({ mapRef, region, location, errorMsg }) => {
-  const [isMapReady, setIsMapReady] = useState(false);
-  const [mapError, setMapError] = useState(null);
-
   // Hardcoded coordinates for restaurant and customer
   const restaurantLocation = {
     latitude: 16.0740,
@@ -47,157 +23,20 @@ const MapContainer = ({ mapRef, region, location, errorMsg }) => {
     description: '22 Bạch Đằng, Đà Nẵng',
   };
 
-  // State to store route information for both segments
-  const [routeInfo, setRouteInfo] = useState({
-    toRestaurant: { distance: null, duration: null },
-    toCustomer: { distance: null, duration: null }
-  });
-  const [routeCoordinates, setRouteCoordinates] = useState({
-    toRestaurant: [],
-    toCustomer: []
-  });
-
-  useEffect(() => {
-    if (location) {
-      // Calculate route from current location to restaurant
-      const fetchToRestaurantRoute = async () => {
-        try {
-          const response = await fetch(
-            `https://rsapi.goong.io/Direction?origin=${location.latitude},${location.longitude}&destination=${restaurantLocation.latitude},${restaurantLocation.longitude}&vehicle=car&api_key=${GOONG_API_KEY}`
-          );
-          const data = await response.json();
-          
-          if (data.routes && data.routes[0]) {
-            const route = data.routes[0];
-            const coordinates = route.legs[0].steps.map(step => ({
-              latitude: step.start_location.lat,
-              longitude: step.start_location.lng
-            }));
-            coordinates.push({
-              latitude: route.legs[0].steps[route.legs[0].steps.length - 1].end_location.lat,
-              longitude: route.legs[0].steps[route.legs[0].steps.length - 1].end_location.lng
-            });
-            
-            const stitchedCoordinates = createStitchedCoordinates(coordinates);
-            setRouteCoordinates(prev => ({
-              ...prev,
-              toRestaurant: stitchedCoordinates
-            }));
-            setRouteInfo(prev => ({
-              ...prev,
-              toRestaurant: {
-                distance: route.distance / 1000,
-                duration: Math.ceil(route.duration / 60),
-              }
-            }));
-          }
-        } catch (error) {
-          console.error('Error fetching route to restaurant:', error);
-          setMapError('Không thể tải thông tin tuyến đường đến nhà hàng');
-        }
-      };
-
-      // Calculate route from restaurant to customer
-      const fetchToCustomerRoute = async () => {
-        try {
-          const response = await fetch(
-            `https://rsapi.goong.io/Direction?origin=${restaurantLocation.latitude},${restaurantLocation.longitude}&destination=${customerLocation.latitude},${customerLocation.longitude}&vehicle=car&api_key=${GOONG_API_KEY}`
-          );
-          const data = await response.json();
-          
-          if (data.routes && data.routes[0]) {
-            const route = data.routes[0];
-            const coordinates = route.legs[0].steps.map(step => ({
-              latitude: step.start_location.lat,
-              longitude: step.start_location.lng
-            }));
-            coordinates.push({
-              latitude: route.legs[0].steps[route.legs[0].steps.length - 1].end_location.lat,
-              longitude: route.legs[0].steps[route.legs[0].steps.length - 1].end_location.lng
-            });
-            
-            const stitchedCoordinates = createStitchedCoordinates(coordinates);
-            setRouteCoordinates(prev => ({
-              ...prev,
-              toCustomer: stitchedCoordinates
-            }));
-            setRouteInfo(prev => ({
-              ...prev,
-              toCustomer: {
-                distance: route.distance / 1000,
-                duration: Math.ceil(route.duration / 60),
-              }
-            }));
-          }
-        } catch (error) {
-          console.error('Error fetching route to customer:', error);
-          setMapError('Không thể tải thông tin tuyến đường đến khách hàng');
-        }
-      };
-
-      fetchToRestaurantRoute();
-      fetchToCustomerRoute();
-    }
-  }, [location]);
-
-  const handleMapReady = () => {
-    setIsMapReady(true);
-    setMapError(null);
-  };
-
-  const handleMapError = (error) => {
-    console.error('Map error:', error);
-    setMapError('Không thể tải bản đồ');
-    setIsMapReady(false);
-  };
-
-  // Custom marker component with stitching effect
-  const StitchedMarker = ({ coordinate, title, description, icon, color }) => (
-    <Marker coordinate={coordinate} title={title} description={description}>
-      <View style={styles.markerContainer}>
-        <View style={[styles.markerBackground, { borderColor: color }]}>
-          <View style={styles.markerStitch}>
-            <Ionicons name={icon} size={20} color={color} />
-          </View>
-        </View>
-      </View>
-    </Marker>
-  );
+  // State to store route information
+  const [routeInfo, setRouteInfo] = useState({ distance: null, duration: null });
 
   return (
-    <>
+    <View style={styles.container}>
       <MapView
         ref={mapRef}
         style={StyleSheet.absoluteFillObject}
-        initialRegion={region}
+        provider={Platform.OS === 'android' ? 'PROVIDER_GOOGLE' : undefined}
+        region={region}
         showsUserLocation={false}
-        onMapReady={handleMapReady}
-        onError={handleMapError}
+        showsMyLocationButton={false}
+        followsUserLocation={false}
       >
-        {/* Route to Restaurant */}
-        {isMapReady && routeCoordinates.toRestaurant.length > 0 && (
-          <Polyline
-            coordinates={routeCoordinates.toRestaurant}
-            strokeColor="#FF0000"
-            strokeWidth={4}
-            lineDashPattern={[1, 2]}
-            lineCap="round"
-            lineJoin="round"
-          />
-        )}
-
-        {/* Route to Customer */}
-        {isMapReady && routeCoordinates.toCustomer.length > 0 && (
-          <Polyline
-            coordinates={routeCoordinates.toCustomer}
-            strokeColor="#0000FF"
-            strokeWidth={4}
-            lineDashPattern={[1, 2]}
-            lineCap="round"
-            lineJoin="round"
-          />
-        )}
-
         {/* Biker Marker */}
         {isMapReady && location && (
           <StitchedMarker
@@ -207,86 +46,156 @@ const MapContainer = ({ mapRef, region, location, errorMsg }) => {
             }}
             title="Vị trí của bạn"
             description="Tài xế"
-            icon="bicycle-outline"
-            color="#0000FF"
-          />
+          >
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'white',
+                borderRadius: 20,
+                borderWidth: 2,
+                borderColor: 'blue',
+                padding: 4,
+              }}
+            >
+              <Ionicons name="bicycle-outline" size={20} color="blue" />
+            </View>
+          </Marker>
         )}
 
         {/* Restaurant Marker */}
-        {isMapReady && (
-          <StitchedMarker
-            coordinate={{
+        <Marker
+          coordinate={{
+            latitude: restaurantLocation.latitude,
+            longitude: restaurantLocation.longitude,
+          }}
+          title={restaurantLocation.title}
+          description={restaurantLocation.description}
+        >
+          <View
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'white',
+              borderRadius: 20,
+              borderWidth: 2,
+              borderColor: 'red',
+              padding: 4,
+            }}
+          >
+            <Ionicons name="restaurant-outline" size={20} color="red" />
+          </View>
+        </Marker>
+        {/* Customer Marker */}
+        <Marker
+          coordinate={{
+            latitude: customerLocation.latitude,
+            longitude: customerLocation.longitude,
+          }}
+          title={customerLocation.title}
+          description={customerLocation.description}
+        >
+          <View
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'white',
+              borderRadius: 20,
+              borderWidth: 2,
+              borderColor: 'green',
+              padding: 4,
+            }}
+          >
+            <Ionicons name="person-outline" size={20} color="green" />
+          </View>
+        </Marker>
+        {/* Route from Biker to Restaurant */}
+        {location && (
+          <MapViewDirections
+            origin={{
+              latitude: location.latitude,
+              longitude: location.longitude,
+            }}
+            destination={{
               latitude: restaurantLocation.latitude,
               longitude: restaurantLocation.longitude,
             }}
-            title={restaurantLocation.title}
-            description={restaurantLocation.description}
-            icon="restaurant-outline"
-            color="#FF0000"
-          />
-        )}
-
-        {/* Customer Marker */}
-        {isMapReady && (
-          <StitchedMarker
-            coordinate={{
-              latitude: customerLocation.latitude,
-              longitude: customerLocation.longitude,
+            apikey={GOOGLE_MAPS_APIKEY}
+            strokeWidth={5}
+            strokeColor="#0000FF"
+            mode="DRIVING"
+            map={mapRef.current} // Pass the map instance for web
+            onReady={(result) => {
+              setRouteInfo({
+                distance: result.distance,
+                duration: result.duration,
+              });
+              // Fit map to show the route
+              mapRef.current.fitToCoordinates?.(result.coordinates, {
+                edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+              });
             }}
-            title={customerLocation.title}
-            description={customerLocation.description}
-            icon="person-outline"
-            color="#00FF00"
+            onError={(errorMessage) => {
+              console.log('Directions error:', errorMessage);
+            }}
           />
         )}
       </MapView>
 
       {/* Route Information Overlay */}
-      {isMapReady && routeInfo.toRestaurant.distance && routeInfo.toCustomer.distance && (
-        <View style={styles.routeInfoContainer}>
-          <View style={styles.routeInfoSection}>
-            <Text style={[styles.routeInfoTitle, { color: '#FF0000' }]}>
-              Đến nhà hàng:
-            </Text>
-            <Text style={styles.routeInfoText}>
-              Khoảng cách: {routeInfo.toRestaurant.distance.toFixed(2)} km
-            </Text>
-            <Text style={styles.routeInfoText}>
-              Thời gian: {routeInfo.toRestaurant.duration} phút
-            </Text>
-          </View>
-
-          <View style={styles.routeInfoDivider} />
-
-          <View style={styles.routeInfoSection}>
-            <Text style={[styles.routeInfoTitle, { color: '#0000FF' }]}>
-              Đến khách hàng:
-            </Text>
-            <Text style={styles.routeInfoText}>
-              Khoảng cách: {routeInfo.toCustomer.distance.toFixed(2)} km
-            </Text>
-            <Text style={styles.routeInfoText}>
-              Thời gian: {routeInfo.toCustomer.duration} phút
-            </Text>
-          </View>
+      {routeInfo.distance && routeInfo.duration && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 10,
+            left: 10,
+            backgroundColor: 'white',
+            padding: 10,
+            borderRadius: 8,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
+        >
+          <Text style={{ fontSize: 8, fontWeight: 'bold' }}>
+            Khoảng cách: {routeInfo.distance.toFixed(2)} km
+          </Text>
+          <Text style={{ fontSize: 8, fontWeight: 'bold' }}>
+            Thời gian: {Math.ceil(routeInfo.duration)} phút
+          </Text>
         </View>
       )}
 
-      {(!isMapReady || mapError || !location) && (
-        <View style={styles.loadingContainer}>
-          <View style={styles.loadingContent}>
-            <Ionicons name="location-outline" size={48} color="#888" style={styles.loadingIcon} />
-            <Text style={styles.loadingText}>
-              {mapError || errorMsg || 'Đang tải bản đồ...'}
+      {!location && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
+          <View style={{ backgroundColor: 'white', padding: 24, borderRadius: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, alignItems: 'center' }}>
+            <Ionicons name="location-outline" size={48} color="#888" style={{ marginBottom: 16 }} />
+            <Text style={{ fontSize: 18, fontWeight: '600', color: '#333' }}>
+              {errorMsg || 'Đang tải bản đồ...'}
             </Text>
-            {!mapError && !errorMsg && (
-              <Text style={styles.loadingSubtext}>Vui lòng chờ trong giây lát</Text>
-            )}
+            {!errorMsg && <Text style={{ color: '#666', marginTop: 8 }}>Vui lòng chờ trong giây lát</Text>}
           </View>
         </View>
       )}
-    </>
+    </View>
   );
+};
+
+// Export locations để sử dụng trong App
+MapContainer.restaurantLocation = {
+  latitude: 16.0740,
+  longitude: 108.1498,
+  title: 'Nhà hàng - ĐH Bách Khoa',
+  description: '54 Nguyễn Lương Bằng, Hòa Khánh, Liên Chiểu, Đà Nẵng',
+};
+
+MapContainer.customerLocation = {
+  latitude: 16.0736,
+  longitude: 108.2250,
+  title: 'Khách hàng',
+  description: '22 Bạch Đằng, Đà Nẵng',
 };
 
 const styles = StyleSheet.create({

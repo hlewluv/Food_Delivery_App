@@ -20,26 +20,6 @@ const ConnectionModal = ({ visible, onClose, autoAccept, setAutoAccept, isConnec
               : 'Tăng cơ hội nhận cuốc khi bật tự động nhận cuốc'}
           </Text>
 
-          {!isConnected && (
-            <View className='flex-row justify-between items-center py-3 border-b border-gray-200'>
-              <Text className='text-base'>Tự động nhận cuốc</Text>
-              <Switch
-                value={autoAccept}
-                onValueChange={setAutoAccept}
-                trackColor={{ false: '#e5e7eb', true: '#00b14f' }}
-                thumbColor='#ffffff'
-              />
-            </View>
-          )}
-
-          <View className='flex-row justify-between items-center py-3'>
-            <Text className='text-base'>Điểm đến yêu thích</Text>
-            <View className='flex-row items-center'>
-              <TouchableOpacity onPress={() => setShowFavoritesModal(true)} className='ml-2'>
-                <Ionicons name='chevron-forward' size={20} color='#00b14f' />
-              </TouchableOpacity>
-            </View>
-          </View>
 
           <TouchableOpacity
             className={`rounded-full py-4 items-center mt-6 ${
