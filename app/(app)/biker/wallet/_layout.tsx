@@ -49,14 +49,6 @@ export default function MerchantTabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="bonus"
-        options={{
-          title: 'Tiền thưởng',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon="gift" title="Tiền thưởng" />,
-        }}
-      />
-      <Tabs.Screen
         name="wallet"
         options={{
           title: 'Ví',
