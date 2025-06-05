@@ -1,23 +1,36 @@
 import { View, Text, Image, TouchableOpacity } from 'react-native'
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons'
+import React from 'react';
+
+interface Food {
+  id: string;
+  name: string;
+  image: string;
+  time?: string;
+  price: string;
+  description: string;
+  discount?: string;
+  restaurantName?: string;  // Thêm các trường này để khớp với FoodDetail
+  restaurantImage?: string;
+  option_menu?: any[];      // Thêm nếu cần
+}
 
 interface FoodHeaderInfoProps {
-  food: Food
-  onBack: () => void
+  food: Food;
+  onBack: () => void;
 }
 
 const FoodHeaderInfo = ({ food, onBack }: FoodHeaderInfoProps) => {
   return (
     <>
-      {/* Phần hình ảnh và nút back */}
+      {/* Hình ảnh và nút quay lại */}
       <View className="h-56 relative">
         <Image 
-          source={food.image} 
-          className="w-full h-full" 
-          resizeMode="cover" 
+          source={{ uri: food.image }} // ✅ CHỈNH ĐIỂM NÀY
+          className="w-full h-full"
+          resizeMode="cover"
         />
-        
-        <View className="absolute top-12 left-0 right-0 flex-row justify-between">
+        <View className="absolute top-12 left-0 right-0 flex-row justify-between px-4">
           <TouchableOpacity
             className="w-10 h-10 rounded-full bg-black/50 justify-center items-center"
             onPress={onBack}
@@ -27,8 +40,8 @@ const FoodHeaderInfo = ({ food, onBack }: FoodHeaderInfoProps) => {
         </View>
       </View>
 
-      {/* Phần thông tin món ăn */}
-      <View className='px-5'>
+      {/* Thông tin món ăn */}
+      <View className="px-5">
         <View className="flex-row justify-between items-start mb-4 mt-4">
           <Text className="text-2xl font-bold text-gray-900 flex-1 mr-2">
             {food.name}
@@ -52,7 +65,7 @@ const FoodHeaderInfo = ({ food, onBack }: FoodHeaderInfoProps) => {
           </View>
         )}
 
-        {/* Khuyến mãi */}
+        {/* Ưu đãi */}
         {food.discount && (
           <View className="mb-6 p-3 bg-green-50 rounded-lg border border-green-100">
             <View className="flex-row items-center">

@@ -7,8 +7,8 @@ export interface RestaurantApiResponse {
   address_restaurant: string;
   image: string;
   user: string;
-  vouchers: number[],
-  average_rating: number,
+  vouchers?: number[],
+  average_rating?: number,
   type_restaurant?: string
 }
 
@@ -17,7 +17,7 @@ export interface RestaurantItem {
   name: string;
   image: string;
   discount?: number;
-  rating: number;
+  rating?: number;
   time: string;
 }
 
@@ -26,7 +26,7 @@ export interface RestaurantRecommend {
   name: string;
   image: string;
   category?: string;
-  rating: number;
+  rating?: number;
   time: string;
 }
 
@@ -42,6 +42,7 @@ export interface RestaurantDetailApiReponse {
     {
       id: string,
       option_name: string
+      price?: string
     },
   ],
   description?: string
@@ -55,6 +56,6 @@ export interface RestaurantDetailItem{
   food_name: string,
   image: string,
   time: string,
-  option_menu?: { id: string; option_name: string }[],
+  option_menu?: { id: string; option_name: string; price?: string }[],
   description?: string
 }

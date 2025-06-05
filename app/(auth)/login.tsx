@@ -4,10 +4,9 @@ import { icons } from '@/constant/icons';
 import { images } from '@/constant/images';
 import { Link, router } from 'expo-router';
 import InputField from '@/components/InputField';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import apiClient from '@/apis/config/apiClient';
 import { LoginPayload, AuthResponse } from '@/apis/auth/types'; // Import interfaces
 import { login } from '@/apis/auth/authService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = () => {
   const [formData, setFormData] = useState<LoginPayload>({
@@ -41,8 +40,16 @@ const Login = () => {
         password: formData.password
       });
 
-      // Chuyển hướng sau khi login thành công
-      router.replace('/(app)/customer/(tabs)/home');
+      const role = await AsyncStorage.getItem('role');
+
+      if(role === 'Customer'){
+        router.replace('/(app)/customer/(tabs)/home');
+      }else if(role === 'Host'){
+        router.replace('/(app)/merchant/(tabs)/home');
+      }else if(role === 'Shipper'){
+        router.replace('/(app)/biker/index');
+      }
+
     } catch (error: any) {
       console.error('API Error:', error);
       // Xử lý error response

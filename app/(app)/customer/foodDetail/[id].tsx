@@ -4,207 +4,212 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  TextInput,
-  StyleSheet
-} from 'react-native'
-import React, { useState } from 'react'
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
-import { Feather, MaterialIcons, Ionicons } from '@expo/vector-icons'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import FoodHeaderInfo from '@/components/food/FoodHeaderInfo'
-import AdditionalOptions from '@/components/food/AdditionalOptions'
-import SpecialRequest from '@/components/food/SpecialRequest'
-import ActionBar from '@/components/food/ActionBar'
+  Alert,
+  SafeAreaView,
+} from 'react-native';
+import React, { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+import FoodHeaderInfo from '@/components/food/FoodHeaderInfo';
+import SpecialRequest from '@/components/food/SpecialRequest';
+import ActionBar from '@/components/food/ActionBar';
+import { useCartStore } from '@/apis/cart/cartStore';
+import { syncCartWithServer } from '@/apis/cart/cartFoodList';
+import NetInfo from '@react-native-community/netinfo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface AdditionalOption {
-  name: string
-  description: string
-  price: string
-  selected: boolean
+interface FoodOption {
+  id: string;
+  option_name: string;
+  price: number;
+  selected?: boolean;
 }
 
 interface Food {
-  id: string
-  name: string
-  image: any
-  time?: string
-  price: string
-  description: string
-  discount?: string
-  options?: AdditionalOption[]
-
-  restaurantName?: string
-  restaurantImage?: any
+  id: string;
+  name: string;
+  image: string;
+  time?: string;
+  price: string;
+  description: string;
+  option_menu?: {
+    id: string;
+    option_name: string;
+    price: string;
+  }[];
+  restaurantName?: string;
+  restaurantImage?: string;
+  restaurantId?: string;
 }
 
 const FoodDetail = () => {
-  const router = useRouter()
-  const { food } = useLocalSearchParams<{ food: string }>()
-  const [quantity, setQuantity] = useState(1)
-  const [specialRequest, setSpecialRequest] = useState('')
+  const router = useRouter();
+  const { food } = useLocalSearchParams<{ food: string }>();
+  const [quantity, setQuantity] = useState(1);
+  const [specialRequest, setSpecialRequest] = useState('');
 
-  // State for additional options
-  const [additionalOptions, setAdditionalOptions] = useState<AdditionalOption[]>([
-    {
-      name: 'Canh rong biển',
-      description: 'bổ dưỡng, thanh mát',
-      price: '+17.000',
-      selected: false
-    },
-    {
-      name: 'Canh cải ngọt',
-      description: 'bổ dưỡng, thanh đạm',
-      price: '+17.000',
-      selected: false
-    },
-    {
-      name: 'Cơm chiên giòn thêm',
-      description: '',
-      price: '+15.000',
-      selected: false
-    },
-    {
-      name: 'Trứng ốp la',
-      description: '',
-      price: '+12.000',
-      selected: false
-    },
-    {
-      name: 'Nước ép chanh dây',
-      description: 'thanh mát, giải nhiệt',
-      price: '+25.000',
-      selected: false
-    },
-    {
-      name: 'Coca-cola',
-      description: '',
-      price: '+19.000',
-      selected: false
-    },
-    {
-      name: 'Nước khoáng lạt',
-      description: '',
-      price: '+17.000',
-      selected: false
-    }
-  ])
+  const { addItem } = useCartStore();
 
-  // Parse food data with error handling
-  let foodData: Food | null = null
+  let foodData: Food | null = null;
   try {
-    foodData = food ? JSON.parse(food) : null
+    foodData = food ? JSON.parse(food) : null;
   } catch (error) {
-    console.error('Error parsing food data:', error)
+    console.error('Error parsing food data:', error);
+    Alert.alert('Lỗi', 'Không thể tải thông tin món ăn');
+    router.back();
   }
+
+  const [foodOptions, setFoodOptions] = useState<FoodOption[]>(
+    foodData?.option_menu?.map((opt) => ({
+      id: opt.id,
+      option_name: opt.option_name,
+      price: parseFloat(opt.price.replace(/[^0-9.-]+/g, '')) || 0,
+      selected: false,
+    })) || []
+  );
 
   if (!foodData) {
     return (
-      <SafeAreaView className='flex-1 justify-center items-center bg-gray-50'>
-        <Text className='text-gray-500 text-lg mb-4'>Không tìm thấy thông tin món ăn</Text>
+      <SafeAreaView className="flex-1 justify-center items-center bg-gray-50">
+        <Text className="text-gray-500 text-lg mb-4">Không tìm thấy thông tin món ăn</Text>
         <TouchableOpacity
-          className='bg-primary px-6 py-3 rounded-full'
-          onPress={() => router.back()}>
-          <Text className='text-white font-medium'>Quay lại</Text>
+          className="bg-green-500 px-6 py-3 rounded-full"
+          onPress={() => router.back()}
+        >
+          <Text className="text-white font-medium">Quay lại</Text>
         </TouchableOpacity>
       </SafeAreaView>
-    )
+    );
   }
 
-  // Toggle selection for additional options
-  const toggleAdditionalOption = (index: number) => {
-    const newOptions = [...additionalOptions]
-    // Check if we can select more (max 7)
-    const selectedCount = newOptions.filter(opt => opt.selected).length
+  const toggleFoodOption = (optionId: string) => {
+    setFoodOptions((prevOptions) =>
+      prevOptions.map((opt) =>
+        opt.id === optionId ? { ...opt, selected: !opt.selected } : opt
+      )
+    );
+  };
 
-    if (!newOptions[index].selected && selectedCount >= 7) {
-      // Show alert or feedback to user
-      alert('Bạn chỉ có thể chọn tối đa 7 món thêm')
-      return
+  const handleAddToCart = async () => {
+    if (!foodData.restaurantId) {
+      Alert.alert('Lỗi', 'Không xác định được nhà hàng');
+      return;
     }
 
-    newOptions[index].selected = !newOptions[index].selected
-    setAdditionalOptions(newOptions)
-  }
+    const selectedFoodOptions = foodOptions.filter((opt) => opt.selected);
+    const basePrice = parseFloat(foodData.price.replace(/[^0-9.-]+/g, '')) || 0;
+    if (isNaN(basePrice)) {
+      Alert.alert('Lỗi', 'Giá món ăn không hợp lệ');
+      return;
+    }
 
-  const handleAddToCart = () => {
     const cartItem = {
-      food: foodData,
+      item: {
+        id: foodData.id,
+        name: foodData.name,
+        price: basePrice,
+        image: foodData.image ? { uri: foodData.image } : null,
+        options: foodData.option_menu?.map((opt) => ({
+          id: opt.id,
+          option_name: opt.option_name,
+          price: parseFloat(opt.price.replace(/[^0-9.-]+/g, '')) || 0,
+        })),
+      },
       quantity,
+      restaurantId: foodData.restaurantId,
       specialRequest,
-      totalPrice: calculateTotalPrice(),
-      selectedOptions: foodData.options?.filter(opt => opt.selected) || [],
-      additionalOptions: additionalOptions.filter(opt => opt.selected)
-    }
+      selectedOptions: selectedFoodOptions,
+    };
 
-    console.log('Added to cart:', cartItem)
-    // In a real app, you would add to cart context/state here
-    router.back()
-  }
+    addItem(cartItem);
+
+    // const state = await NetInfo.fetch();
+    // if (!state.isConnected) {
+    //   await AsyncStorage.setItem(`pendingCartUpdates_${foodData.restaurantId}`, JSON.stringify([cartItem]));
+    //   Alert.alert('Thành công', 'Đã thêm vào giỏ hàng (sẽ đồng bộ khi có mạng)');
+    // } else {
+    //   try {
+    //     await syncCartWithServer([cartItem]);
+    //     Alert.alert('Thành công', 'Đã thêm vào giỏ hàng');
+    //   } catch (error) {
+    //     console.error('Error syncing cart:', error);
+    //     Alert.alert('Lỗi', 'Không thể đồng bộ giỏ hàng với server');
+    //   }
+    // }
+
+    router.back();
+  };
 
   const calculateTotalPrice = (): number => {
-    const basePrice = parseFloat(foodData?.price.replace(/[^0-9.-]+/g, '') || '0')
-
-    // Original options price
-    let optionsPrice = 0
-    if (foodData?.options) {
-      optionsPrice = foodData.options
-        .filter(opt => opt.selected && opt.price)
-        .reduce((sum, opt) => sum + parseFloat(opt.price?.replace(/[^0-9.-]+/g, '') || 0), 0)
-    }
-
-    // Additional options price
-    const additionalOptionsPrice = additionalOptions
-      .filter(opt => opt.selected)
-      .reduce((sum, opt) => sum + parseFloat(opt.price.replace(/[^0-9.-]+/g, '') || 0), 0)
-
-    return (basePrice + optionsPrice + additionalOptionsPrice) * quantity
-  }
-
-  const toggleOption = (index: number) => {
-    if (!foodData?.options) return
-
-    const newOptions = [...foodData.options]
-    newOptions[index].selected = !newOptions[index].selected
-    // In a real app, you would update state or context here
-  }
+    const basePrice = parseFloat(foodData.price.replace(/[^0-9.-]+/g, '')) || 0;
+    const optionsPrice = foodOptions
+      .filter((opt) => opt.selected)
+      .reduce((sum, opt) => sum + opt.price, 0);
+    return (basePrice + optionsPrice) * quantity;
+  };
 
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
-      currency: 'VND'
-    }).format(price)
-  }
-
-  const totalPrice = calculateTotalPrice()
-  const selectedAdditionalCount = additionalOptions.filter(opt => opt.selected).length
+      currency: 'VND',
+    }).format(price);
+  };
 
   return (
-    <SafeAreaView className='flex-1 bg-white'>
-      {/* Ensure header is hidden */}
+    <SafeAreaView className="flex-1 bg-white">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120 }}>
-        <FoodHeaderInfo food={foodData} onBack={() => router.back()} />
-
-        <AdditionalOptions
-          options={additionalOptions}
-          selectedCount={selectedAdditionalCount}
-          onToggleOption={toggleAdditionalOption}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
+        <FoodHeaderInfo
+          food={{
+            id: foodData.id,
+            name: foodData.name,
+            image: foodData.image,
+            price: foodData.price,
+            description: foodData.description,
+            time: foodData.time,
+          }}
+          onBack={() => router.back()}
         />
+
+        {foodOptions.length > 0 && (
+          <View className="px-4 py-2">
+            <Text className="text-lg font-bold mb-2">Tùy chọn món ăn</Text>
+            {foodOptions.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                className="flex-row items-center py-2"
+                onPress={() => toggleFoodOption(option.id)}
+              >
+                <View
+                  className={`w-5 h-5 rounded-full border-2 mr-3 ${
+                    option.selected ? 'bg-green-500 border-green-500' : 'border-gray-300'
+                  }`}
+                >
+                  {option.selected && <Feather name="check" size={14} color="white" />}
+                </View>
+                <View className="flex-1">
+                  <Text className="font-medium">{option.option_name}</Text>
+                  <Text className="text-gray-500 text-sm">{formatPrice(option.price)}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         <SpecialRequest value={specialRequest} onChangeText={setSpecialRequest} />
       </ScrollView>
 
-      {/* Using the ActionBar component */}
       <ActionBar
         quantity={quantity}
-        totalPrice={formatPrice(totalPrice)}
-        onDecrease={() => setQuantity(prev => Math.max(1, prev - 1))}
-        onIncrease={() => setQuantity(prev => prev + 1)}
+        totalPrice={formatPrice(calculateTotalPrice())}
+        onDecrease={() => setQuantity((prev) => Math.max(1, prev - 1))}
+        onIncrease={() => setQuantity((prev) => prev + 1)}
         onAddToCart={handleAddToCart}
       />
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default FoodDetail
+export default FoodDetail;

@@ -1,106 +1,61 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+// Goong Maps style URL
+const GOONG_STYLE_URL = 'https://tiles.goong.io/assets/goong_map_web.json';
 
 const WebMapView = React.forwardRef((props, ref) => {
-  const { region, style, children } = props;
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const mapRef = React.useRef(null);
+  const {
+    children,
+    style,
+    region,
+    showsUserLocation = false,
+    ...rest
+  } = props;
 
-  React.useImperativeHandle(ref, () => ({
-    animateToRegion: (region) => {
-      if (mapRef.current && window.google && window.google.maps) {
-        const map = mapRef.current;
-        map.panTo({ lat: region.latitude, lng: region.longitude });
-        map.setZoom(Math.log2(360 / region.longitudeDelta) - 2);
-      }
-    },
-  }));
+  const mapContainer = useRef(null);
+  const map = useRef(null);
 
   useEffect(() => {
-    if (!window.googleMapsInitialized) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        window.googleMapsInitialized = true;
-        setMapLoaded(true);
-        if (mapRef.current) {
-          const map = new window.google.maps.Map(mapRef.current, {
-            center: { lat: region.latitude, lng: region.longitude },
-            zoom: Math.log2(360 / region.longitudeDelta) - 2,
-            mapTypeId: window.google.maps.MapTypeId.ROADMAP,
-            disableDefaultUI: true,
-            zoomControl: true,
-            mapTypeControl: false,
-            scaleControl: true,
-            streetViewControl: false,
-            rotateControl: false,
-            fullscreenControl: false,
-          });
-          mapRef.current = map;
-        }
-      };
-      document.head.appendChild(script);
-    }
+    if (map.current) return;
+
+    map.current = new maplibregl.Map({
+      container: mapContainer.current,
+      style: GOONG_STYLE_URL,
+      center: [region.longitude, region.latitude],
+      zoom: 15
+    });
+
+    // Cleanup on unmount
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
   }, []);
 
+  // Update map center when region changes
   useEffect(() => {
-    if (mapRef.current && window.google && window.google.maps && typeof mapRef.current.panTo === 'function') {
-      mapRef.current.panTo({ lat: region.latitude, lng: region.longitude });
+    if (map.current) {
+      map.current.flyTo({
+        center: [region.longitude, region.latitude],
+        essential: true
+      });
     }
   }, [region]);
 
-  return (
-    <View style={[styles.webContainer, style]}>
-      <div
-        ref={mapRef}
-        style={{
-          width: '100%',
-          height: '100%',
-          borderRadius: '8px',
-          overflow: 'hidden',
-        }}
-      />
-      {!mapLoaded && (
-        <View style={styles.loadingOverlay}>
-          <Text style={styles.webText}>Loading map...</Text>
-        </View>
-      )}
-      {React.Children.map(children, (child) => {
-        if (child && child.type && child.type.displayName === 'WebMarker') {
-          return React.cloneElement(child, { map: mapRef.current });
-        }
-        return null;
-      })}
-    </View>
-  );
-});
+  // Expose map instance through ref
+  React.useImperativeHandle(ref, () => ({
+    current: map.current
+  }));
 
-const styles = StyleSheet.create({
-  webContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    overflow: 'hidden',
-  },
-  webText: {
-    color: '#666',
-    fontSize: 16,
-    textAlign: 'center',
-    padding: 20,
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(245, 245, 245, 0.8)',
-  },
+  return (
+    <div ref={mapContainer} style={style}>
+      {children}
+    </div>
+  );
 });
 
 WebMapView.displayName = 'WebMapView';

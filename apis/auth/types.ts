@@ -9,5 +9,17 @@ export interface AuthResponse {
     email?: string;
     username?: string;
     password?: string;
-    [key: string]: any; // Allow for additional properties
+    id: string;
+    role: string; 
+}
+
+export interface SignupPayload {
+  username: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  first_name: string;
+  last_name: string;
+  id: string,
+  role: string; 
 }

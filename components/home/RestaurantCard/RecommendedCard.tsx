@@ -55,13 +55,17 @@ const RecommendedCard: React.FC<RecommendedCardProps> = ({
         </Text>
 
         <View className="flex-row items-center mt-1">
-          <Image
-            source={icons.star}
-            className="w-5 h-5 mr-1"
-            style={{ tintColor: '#FFD700' }}
-          />
-          <Text className="text-gray-700 text-sm">{item.rating.toFixed(1)}</Text>
-          <Text className="text-gray-500 text-sm mx-1">•</Text>
+          {item.rating !== null && item.rating !== undefined && (
+            <>
+              <Image
+                source={icons.star}
+                className="w-5 h-5 mr-1"
+                style={{ tintColor: '#FFD700' }}
+              />
+              <Text className="text-gray-700 text-sm">{item.rating.toFixed(1)}</Text>
+              <Text className="text-gray-500 text-sm mx-1">•</Text>
+            </>
+          )}
           <Image
             source={icons.clock}
             className="w-4 h-4 mr-1"

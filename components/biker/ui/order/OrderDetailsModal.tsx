@@ -12,13 +12,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-// Types
-type Location = {
+export type Location = {
   latitude: number;
   longitude: number;
 };
 
-type OrderItem = {
+export type OrderItem = {
   id: string;
   food_name: string;
   food_type: string;
@@ -27,19 +26,19 @@ type OrderItem = {
   price: number;
 };
 
-type Customer = {
+export type Customer = {
   name: string;
   address: string;
   phone?: string;
 };
 
-type Restaurant = {
+export type Restaurant = {
   name: string;
   address: string;
   phone?: string;
 };
 
-type Order = {
+export type Order = {
   id: string;
   restaurant: Restaurant;
   customer: Customer;
@@ -50,7 +49,22 @@ type Order = {
   earnings?: number;
 };
 
-type LocationDetailsProps = {
+export type OrderDetailsModalProps = {
+  visible: boolean;
+  onClose: () => void;
+  order: Order | null;
+  setShowFloatingButton: (show: boolean) => void;
+  restaurantLocation: Location;
+  customerLocation: Location;
+  setActiveRoute: (route: 'restaurant' | 'customer' | null) => void;
+  onArrived: () => void;
+};
+
+const formatPrice = (price: number): string => {
+  return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + 'đ';
+};
+
+const LocationDetails: React.FC<{
   title: string;
   name: string;
   address: string;
@@ -59,50 +73,10 @@ type LocationDetailsProps = {
   location: Location;
   onAction: () => void;
   actionText: string;
-  setRouteDestination: (location: Location) => void;
+  setActiveRoute: (route: 'restaurant' | 'customer') => void;
   onMinimize: () => void;
   children?: React.ReactNode;
-};
-
-type RestaurantDetailsProps = {
-  order: Order;
-  onArrived: () => void;
-  restaurantLocation: Location;
-  setRouteDestination: (location: Location) => void;
-  onMinimize: () => void;
-};
-
-type CustomerDetailsProps = {
-  order: Order;
-  onComplete: () => void;
-  customerLocation: Location;
-  setRouteDestination: (location: Location) => void;
-  onMinimize: () => void;
-};
-
-type DeliverySuccessScreenProps = {
-  visible: boolean;
-  onClose: () => void;
-  order: Order | null;
-};
-
-type OrderDetailsModalProps = {
-  visible: boolean;
-  onClose: () => void;
-  order: Order | null;
-  setShowFloatingButton: (show: boolean) => void;
-  restaurantLocation: Location;
-  customerLocation: Location;
-  setRouteDestination: (location: Location) => void;
-};
-
-// Helper function to format price
-const formatPrice = (price: number): string => {
-  return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + 'đ';
-};
-
-// Reusable component for displaying location details
-const LocationDetails: React.FC<LocationDetailsProps> = ({
+}> = ({
   title,
   name,
   address,
@@ -111,15 +85,14 @@ const LocationDetails: React.FC<LocationDetailsProps> = ({
   location,
   onAction,
   actionText,
-  setRouteDestination,
+  setActiveRoute,
   onMinimize,
   children,
 }) => {
   const handleNavigate = useCallback(() => {
-    console.log(`Navigating to ${isRestaurant ? 'restaurant' : 'customer'}...`);
-    setRouteDestination(location);
+    setActiveRoute(isRestaurant ? 'restaurant' : 'customer');
     onMinimize();
-  }, [isRestaurant, location, setRouteDestination, onMinimize]);
+  }, [isRestaurant, setActiveRoute, onMinimize]);
 
   return (
     <View style={styles.locationContainer}>
@@ -131,13 +104,13 @@ const LocationDetails: React.FC<LocationDetailsProps> = ({
       <Text style={styles.locationAddress}>{address}</Text>
       <View style={styles.locationActions}>
         <TouchableOpacity style={styles.actionButton} onPress={onCall}>
-          <Text style={styles.actionIcon}>📞</Text>
+          <Ionicons name="call-outline" size={20} color="#4B5563" style={styles.actionIcon} />
           <Text style={styles.actionText}>
             {isRestaurant ? 'Gọi nhà hàng' : 'Gọi khách'}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton} onPress={handleNavigate}>
-          <Text style={styles.actionIcon}>🗺️</Text>
+          <Ionicons name="navigate-outline" size={20} color="#4B5563" style={styles.actionIcon} />
           <Text style={styles.actionText}>Chỉ đường</Text>
         </TouchableOpacity>
       </View>
@@ -151,7 +124,6 @@ const LocationDetails: React.FC<LocationDetailsProps> = ({
   );
 };
 
-// Reusable component for displaying order items
 const OrderItemsList: React.FC<{ items: OrderItem[] }> = ({ items }) => (
   <View style={styles.orderItemsContainer}>
     <Text style={styles.sectionTitle}>Danh sách món ăn</Text>
@@ -176,7 +148,6 @@ const OrderItemsList: React.FC<{ items: OrderItem[] }> = ({ items }) => (
   </View>
 );
 
-// Reusable component for order summary
 const OrderSummary: React.FC<{ total: number; paymentMethod: string }> = ({ total, paymentMethod }) => (
   <View style={styles.orderSummary}>
     <View style={styles.summaryRow}>
@@ -189,66 +160,11 @@ const OrderSummary: React.FC<{ total: number; paymentMethod: string }> = ({ tota
   </View>
 );
 
-// Restaurant Details Component
-const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
-  order,
-  onArrived,
-  restaurantLocation,
-  setRouteDestination,
-  onMinimize,
-}) => {
-  return (
-    <LocationDetails
-      title="Nhà hàng"
-      name={`${order.restaurant.name} – ${order.restaurant.address.split(',')[0]}`}
-      address={order.restaurant.address}
-      isRestaurant={true}
-      onCall={() => console.log('Calling restaurant...')}
-      location={restaurantLocation}
-      setRouteDestination={setRouteDestination}
-      onMinimize={onMinimize}
-      onAction={onArrived}
-      actionText="Đã đến"
-    >
-      <OrderItemsList items={order.items} />
-      <OrderSummary total={order.total} paymentMethod={order.paymentMethod} />
-    </LocationDetails>
-  );
-};
-
-// Customer Details Component
-const CustomerDetails: React.FC<CustomerDetailsProps> = ({
-  order,
-  onComplete,
-  customerLocation,
-  setRouteDestination,
-  onMinimize,
-}) => {
-  return (
-    <LocationDetails
-      title="Khách hàng"
-      name={order.customer.name}
-      address={order.customer.address}
-      isRestaurant={false}
-      onCall={() => console.log('Calling customer...')}
-      location={customerLocation}
-      setRouteDestination={setRouteDestination}
-      onMinimize={onMinimize}
-      onAction={onComplete}
-      actionText="Hoàn tất"
-    >
-      <OrderItemsList items={order.items} />
-      <OrderSummary total={order.total} paymentMethod={order.paymentMethod} />
-    </LocationDetails>
-  );
-};
-
-// Delivery Success Screen Component
-const DeliverySuccessScreen: React.FC<DeliverySuccessScreenProps> = ({
-  visible,
-  onClose,
-  order,
-}) => {
+const DeliverySuccessScreen: React.FC<{
+  visible: boolean;
+  onClose: () => void;
+  order: Order | null;
+}> = ({ visible, onClose, order }) => {
   if (!visible || !order) return null;
 
   const screenHeight = Dimensions.get('window').height;
@@ -266,7 +182,7 @@ const DeliverySuccessScreen: React.FC<DeliverySuccessScreenProps> = ({
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Giao hàng thành công</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Text style={styles.closeIcon}>✕</Text>
+              <Ionicons name="close-outline" size={24} color="#6B7280" />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.scrollContainer}>
@@ -301,7 +217,6 @@ const DeliverySuccessScreen: React.FC<DeliverySuccessScreenProps> = ({
   );
 };
 
-// Main OrderDetailsModal Component
 const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   visible,
   onClose,
@@ -309,13 +224,17 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   setShowFloatingButton,
   restaurantLocation,
   customerLocation,
-  setRouteDestination,
+  setActiveRoute,
+  onArrived,
 }) => {
   const [phase, setPhase] = useState<'restaurant' | 'customer'>('restaurant');
   const [isSuccess, setIsSuccess] = useState(false);
   const [minimized, setMinimized] = useState(false);
 
   useEffect(() => {
+    if (visible && !isSuccess && !minimized) {
+      setActiveRoute('restaurant');
+    }
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       if (visible && !isSuccess && !minimized) {
         handleMinimize();
@@ -332,15 +251,19 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
       return false;
     });
     return () => backHandler.remove();
-  }, [visible, isSuccess, minimized]);
+  }, [visible, isSuccess, minimized, setActiveRoute]);
 
   const handleArrived = useCallback(() => {
     setPhase('customer');
-  }, []);
+    if (typeof setActiveRoute === 'function') {
+      setActiveRoute('customer');
+    }
+  }, [setActiveRoute]);
 
   const handleComplete = useCallback(() => {
     setIsSuccess(true);
-  }, []);
+    setActiveRoute(null);
+  }, [setActiveRoute]);
 
   const handleCloseSuccess = useCallback(() => {
     setIsSuccess(false);
@@ -353,8 +276,9 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   const handleCloseModal = useCallback(() => {
     setMinimized(false);
     setShowFloatingButton(true);
+    setActiveRoute(null);
     onClose();
-  }, [onClose, setShowFloatingButton]);
+  }, [onClose, setShowFloatingButton, setActiveRoute]);
 
   const handleMinimize = useCallback(() => {
     setMinimized(true);
@@ -385,26 +309,42 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Hóa đơn chi tiết</Text>
               <TouchableOpacity onPress={handleMinimize} style={styles.minimizeButton}>
-                <Text style={styles.minimizeIcon}>↓</Text>
+                <Ionicons name="chevron-down-outline" size={24} color="#6B7280" />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.scrollContainer}>
               {phase === 'restaurant' ? (
-                <RestaurantDetails
-                  order={order}
-                  onArrived={handleArrived}
-                  restaurantLocation={restaurantLocation}
-                  setRouteDestination={setRouteDestination}
+                <LocationDetails
+                  title="Nhà hàng"
+                  name={`${order.restaurant.name} – ${order.restaurant.address.split(',')[0]}`}
+                  address={order.restaurant.address}
+                  isRestaurant={true}
+                  onCall={() => console.log('Calling restaurant...')}
+                  location={restaurantLocation}
+                  setActiveRoute={setActiveRoute}
                   onMinimize={handleMinimize}
-                />
+                  onAction={handleArrived}
+                  actionText="Đã đến"
+                >
+                  <OrderItemsList items={order.items} />
+                  <OrderSummary total={order.total} paymentMethod={order.paymentMethod} />
+                </LocationDetails>
               ) : (
-                <CustomerDetails
-                  order={order}
-                  onComplete={handleComplete}
-                  customerLocation={customerLocation}
-                  setRouteDestination={setRouteDestination}
+                <LocationDetails
+                  title="Khách hàng"
+                  name={order.customer.name}
+                  address={order.customer.address}
+                  isRestaurant={false}
+                  onCall={() => console.log('Calling customer...')}
+                  location={customerLocation}
+                  setActiveRoute={setActiveRoute}
                   onMinimize={handleMinimize}
-                />
+                  onAction={handleComplete}
+                  actionText="Hoàn tất"
+                >
+                  <OrderItemsList items={order.items} />
+                  <OrderSummary total={order.total} paymentMethod={order.paymentMethod} />
+                </LocationDetails>
               )}
             </ScrollView>
           </View>
@@ -415,7 +355,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           style={styles.restoreButton}
           onPress={handleRestore}
         >
-          <Ionicons name="document" size={24} color="white" />
+          <Ionicons name="document-outline" size={24} color="white" />
         </TouchableOpacity>
       )}
       <DeliverySuccessScreen 
@@ -427,7 +367,6 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
@@ -439,8 +378,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingHorizontal: 32,
-    paddingVertical: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     width: '100%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
@@ -452,8 +391,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingHorizontal: 32,
-    paddingVertical: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     width: '100%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
@@ -465,29 +404,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1F2937',
   },
   scrollContainer: {
-    maxHeight: 400,
+    flex: 1,
   },
   closeButton: {
-    padding: 8,
-  },
-  closeIcon: {
-    fontSize: 20,
-    color: '#6B7280',
+    padding: 4,
   },
   minimizeButton: {
-    padding: 8,
-  },
-  minimizeIcon: {
-    fontSize: 20,
-    color: '#6B7280',
+    padding: 4,
   },
   locationContainer: {
     marginBottom: 24,
@@ -504,10 +435,10 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   restaurantIndicator: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#EF4444',
   },
   customerIndicator: {
-    backgroundColor: '#9CA3AF',
+    backgroundColor: '#10B981',
   },
   locationTitle: {
     fontSize: 18,
@@ -520,7 +451,7 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
   locationAddress: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#4B5563',
     marginTop: 4,
   },
@@ -528,25 +459,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 16,
+    paddingHorizontal: 8,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   actionIcon: {
-    fontSize: 16,
-    color: '#4B5563',
-    marginRight: 12,
+    marginRight: 8,
   },
   actionText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#4B5563',
   },
   primaryButton: {
     backgroundColor: '#00B14F',
     paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 999,
+    borderRadius: 8,
     width: '100%',
     alignItems: 'center',
     marginTop: 24,
@@ -557,7 +486,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   primaryButtonText: {
-    fontSize: 20,
+    fontSize:  16,
     fontWeight: '600',
     color: 'white',
   },
@@ -574,26 +503,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   orderItemDetails: {
     flex: 1,
+    marginRight: 8,
   },
   orderItemName: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#1F2937',
+    fontWeight: '500',
   },
   orderItemDescription: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6B7280',
+    marginTop: 2,
   },
   orderItemOptions: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6B7280',
+    marginTop: 2,
   },
   orderItemPrice: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#1F2937',
+    fontWeight: '500',
   },
   orderSummary: {
     borderTopWidth: 1,
@@ -617,9 +551,9 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
   paymentMethod: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#4B5563',
-    marginBottom: 4,
+    marginTop: 4,
   },
   successImage: {
     width: '100%',
@@ -637,7 +571,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   infoText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#4B5563',
   },
   earningsRow: {
@@ -647,17 +581,20 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   earningsText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#10B981',
   },
   restoreButton: {
     position: 'absolute',
-    bottom: 105,
-    right: 40,
+    bottom: 100,
+    right: 20,
     backgroundColor: '#00B14F',
-    borderRadius: 999,
-    padding: 16,
+    borderRadius: 30,
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,

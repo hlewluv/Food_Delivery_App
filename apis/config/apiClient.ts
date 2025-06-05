@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { refreshToken } from '../auth/refreshToken';
 
 const apiClient = axios.create({
-  baseURL: 'http://192.168.110.232:8000/user/',
+  baseURL: 'http://192.168.1.221:8000/user/',
 });
 
 // Request interceptor

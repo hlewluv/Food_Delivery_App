@@ -16,7 +16,8 @@ export const getRestaurantDetail = async (restaurantId: string): Promise<Restaur
     time: item.time ?? '',
     option_menu: item.option_menu?.map(option => ({
       id: option.id,
-      option_name: option.option_name
+      option_name: option.option_name,
+      price: option.price
     })) ?? [],
     description: item.description ?? ''
   }));

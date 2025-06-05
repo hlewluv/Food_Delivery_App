@@ -8,6 +8,7 @@ export default function CustomerLayout() {
       <Stack.Screen name="foodDetail/[id]" />
       <Stack.Screen name="confirm/index" />
       <Stack.Screen name="cart/index" />
+      <Stack.Screen name="payment/index" />
     </Stack>
   );
 }

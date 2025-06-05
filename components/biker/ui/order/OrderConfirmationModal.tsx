@@ -1,7 +1,12 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity } from 'react-native';
 
-const OrderConfirmationModal = ({ visible, onStart }) => {
+interface OrderConfirmationModalProps {
+  visible: boolean;
+  onStart: () => void;
+}
+
+const OrderConfirmationModal = ({ visible, onStart }: OrderConfirmationModalProps) => {
   return (
     <Modal
       transparent

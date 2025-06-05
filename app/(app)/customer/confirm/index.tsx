@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, FlatList, RefreshControl } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { MaterialIcons, FontAwesome, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import RecommendedCard from '@/components/home/RestaurantCard/RecommendedCard';
 import { Restaurant, restaurantsData } from '@/data/restaurants';
 
 const ConfirmScreen = () => {
@@ -39,16 +38,6 @@ const ConfirmScreen = () => {
       [restaurantId]: !prev[restaurantId]
     }));
   };
-
-  // Render item cho FlatList
-  const renderRestaurantItem = ({ item }: { item: Restaurant }) => (
-    <RecommendedCard
-      item={item}
-      isLiked={!!likedRestaurants[item.id]}
-      onToggleLike={() => toggleLike(item.id)}
-      containerStyle="mx-4 my-2"
-    />
-  );
 
   // Hàm kiểm tra trạng thái
   const isStepCompleted = (step: string) => {
@@ -193,21 +182,6 @@ const ConfirmScreen = () => {
               Các nhà hàng phù hợp với sở thích của bạn
             </Text>
           </View>
-
-          {recommendedRestaurants.length > 0 ? (
-            <FlatList
-              data={recommendedRestaurants}
-              renderItem={renderRestaurantItem}
-              keyExtractor={item => item.id}
-              scrollEnabled={false}
-              ItemSeparatorComponent={() => <View className="h-4" />}
-              contentContainerStyle={{ paddingHorizontal: 16 }}
-            />
-          ) : (
-            <View className="px-4 py-8 items-center">
-              <Text className="text-gray-500">Không tìm thấy nhà hàng phù hợp</Text>
-            </View>
-          )}
         </View>
       )}
 

@@ -1,41 +1,54 @@
 {
   "expo": {
-    "name": "APP",
-    "slug": "APP",
+    "name": "Food Delivery App",
+    "slug": "food-delivery-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "",
-    "scheme": "restaurants",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.fooddeliveryapp",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We need your location to show your position on the map and calculate delivery routes.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "We need your location to show your position on the map and calculate delivery routes.",
+        "UIBackgroundModes": ["location", "fetch"]
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "package": "com.yourcompany.fooddeliveryapp",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "JvtUliVy2MWCKYpI89KrJ9QDLRfES4JYkKcw0srO"
+        }
       }
     },
     "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": ""
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-router",
       [
-        "expo-splash-screen",
+        "expo-location",
         {
-          "image": "",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "locationAlwaysAndWhenInUsePermission": "Allow Food Delivery App to use your location to show your position on the map and calculate delivery routes."
         }
       ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    }
+    ]
   }
 }

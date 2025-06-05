@@ -36,6 +36,7 @@ export default function RootLayout() {
                     'foodDetail/[id]': 'foodDetail/:id',
                     'confirm/index': 'confirm',
                     'cart/index': 'cart',
+                    'payment/index': 'payment'
                   },
                 },
                 merchant: {

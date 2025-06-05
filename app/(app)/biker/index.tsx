@@ -7,6 +7,14 @@ import MapContainer from '@/components/biker/ui/MapContainer';
 import OrderConfirmationModal from '@/components/biker/ui/order/OrderConfirmationModal';
 import OrderDetailsModal from '@/components/biker/ui/order/OrderDetailsModal';
 
+import {
+  Location,
+  Restaurant,
+  Customer,
+  OrderItem,
+  Order,
+} from '@/components/biker/ui/order/OrderDetailsModal'; // Import types
+
 const mockLocation = {
   requestForegroundPermissionsAsync: async () => ({ status: 'granted' }),
   getCurrentPositionAsync: async () => ({
@@ -22,83 +30,49 @@ const mockLocation = {
   }),
 };
 
-const Location = Platform.OS === 'web' ? mockLocation : require('expo-location');
+// Renamed Location variable to LocationModule
+const LocationModule = Platform.OS === 'web' ? mockLocation : require('expo-location');
 
-const initialOrder = {
-  id: 'A125',
-  restaurant: {
-    name: 'Phở 24',
-    address: '123 Lê Lợi, Quận 1, Ho Chi Minh City, 700000',
-  },
-  customer: {
-    name: 'Khách B',
-    address: '456 Trần Hưng Đạo, Quận 5, Ho Chi Minh City, 700000',
-  },
-  biker: {
-    name: 'Muncher B',
-  },
-  time: '00:20',
-  date: '2025-05-22',
-  items: [
-    {
-      id: 'd31df791-fbe8-4e44-b18d-c2bc0e344e8a',
-      food_name: 'Gà Viên',
-      food_type: 'Chicken',
-      price: 55000,
-      image: 'http://res.cloudinary.com/dlxnanybw/image/upload/v1746507726/khriyj80pgpnoggcbnax.png',
-      description: '',
-      time: '00:00:05',
-      option_menu: [],
-    },
-    {
-      id: '773ad024-c9bf-414c-844b-314103f8f594',
-      food_name: 'Gà Chiên Xù',
-      food_type: 'Chicken',
-      price: 45000,
-      image: 'http://res.cloudinary.com/dlxnanybw/image/upload/v1746507714/ea2rybpeyybnyrocvgze.webp',
-      description: '',
-      time: '00:00:05',
-      option_menu: [],
-    },
-    {
-      id: 'ec79fe39-ac15-41f1-bdc1-fbc878249a4c',
-      food_name: 'Soda',
-      food_type: 'Drink',
-      price: 30000,
-      image: 'http://res.cloudinary.com/dlxnanybw/image/upload/v1746946439/fyfikmlvr7adh8mqzlh6.jpg',
-      description: 'Coca Cola very good',
-      time: '00:00:10',
-      option_menu: [['Đá', 'Không đá'], ['Lớn', 'Nhỏ']],
-    },
-  ],
-  total: 130000,
-  status: 'Chờ nhận',
-  paymentMethod: 'Tiền mặt',
-  distance: '0.5 km',
-  earnings: 24500,
+// Placeholder for initial order structure (replace with actual structure)
+const initialOrder: Order = {
+  id: '1',
+  restaurant: { name: 'Restaurant Name', address: 'Restaurant Address' },
+  customer: { name: 'Customer Name', address: 'Customer Address' },
+  items: [],
+  total: 0,
+  paymentMethod: 'Cash',
+  distance: '0 km',
+  earnings: 0,
 };
+
+// Placeholder locations (replace with actual values)
+const restaurantLocation = { latitude: 16.0740, longitude: 108.1498 };
+const customerLocation = { latitude: 16.0736, longitude: 108.2250 };
 
 const App = () => {
   // State management
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [balance, setBalance] = useState(3000000);
   const [isConnected, setIsConnected] = useState(true);
   const [showConnectionModal, setShowConnectionModal] = useState(false);
   const [autoAccept, setAutoAccept] = useState(false);
+  const [activeRoute, setActiveRoute] = useState<'restaurant' | 'customer' | null>(null);
   const [region, setRegion] = useState({
     latitude: 16.0738,
-    longitude: 108.1874,
+    longitude: 108.1498,
     latitudeDelta: 0.1,
     longitudeDelta: 0.1,
   });
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [currentOrder, setCurrentOrder] = useState(null);
-  const [showFloatingButton, setShowFloatingButton] = useState(false);
-  const [destination, setDestination] = useState(null);
-  const [routeInfo, setRouteInfo] = useState({ distance: null, duration: null });
-  const mapRef = useRef(null);
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(null); // Typed currentOrder state
+  const [showFloatingButton, setShowFloatingButton] = useState(true);
+  const [destination, setDestination] = useState<{ latitude: number; longitude: number } | null>(null); // Typed destination state
+  const [routeInfo, setRouteInfo] = useState<{ distance: number | null; duration: number | null } | null>(null);
+  const [showCustomerRoute, setShowCustomerRoute] = useState(false);
+  const mapRef = useRef<any>(null); // Typed mapRef
+  const [showFavoritesModal, setShowFavoritesModal] = useState(false); // Added state for Favorites Modal
 
   // Format money utility
   const formatMoney = useCallback((amount: number) => {
@@ -115,14 +89,14 @@ const App = () => {
   // Get current location
   const getCurrentLocation = useCallback(async () => {
     try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      let { status } = await LocationModule.requestForegroundPermissionsAsync(); // Use LocationModule
       if (status !== 'granted') {
         setErrorMsg('Quyền truy cập vị trí bị từ chối');
         return null;
       }
 
-      return await Location.getCurrentPositionAsync({
-        accuracy: Platform.OS === 'web' ? null : Location.Accuracy.High,
+      return await LocationModule.getCurrentPositionAsync({ // Use LocationModule
+        accuracy: Platform.OS === 'web' ? null : LocationModule.Accuracy.High, // Use LocationModule
       });
     } catch (error) {
       setErrorMsg('Không thể lấy vị trí hiện tại');
@@ -130,6 +104,19 @@ const App = () => {
       return null;
     }
   }, []);
+
+  const handleSetActiveRoute = useCallback((route: 'restaurant' | 'customer' | null) => {
+    setActiveRoute(route);
+
+    // Update destination based on the active route
+    if (route === 'restaurant') {
+      setDestination(restaurantLocation);
+    } else if (route === 'customer') {
+      setDestination(customerLocation);
+    } else {
+      setDestination(null);
+    }
+  }, [restaurantLocation, customerLocation]);
 
   // Initialize map and location
   useEffect(() => {
@@ -178,7 +165,7 @@ const App = () => {
 
   // Center map to current location
   const handleCenterMap = useCallback(() => {
-    if (location && mapRef.current) {
+    if (location && mapRef.current && mapRef.current.animateToRegion) { // Added null check for animateToRegion
       mapRef.current.animateToRegion({
         latitude: location.latitude,
         longitude: location.longitude,
@@ -192,36 +179,39 @@ const App = () => {
   const toggleConnection = useCallback(() => {
     const newStatus = !isConnected;
     setIsConnected(newStatus);
-    
+
     if (!newStatus) {
       setAutoAccept(false);
       setShowOrderModal(false);
       setShowDetailsModal(false);
-      setCurrentOrder(null);
+      setCurrentOrder(null); // Corrected to null
       setShowFloatingButton(false);
       setDestination(null);
-    } else if (!currentOrder) {
+      handleSetActiveRoute(null); // Also clear active route
+    } else if (newStatus && !currentOrder) { // Corrected condition here
       setCurrentOrder(initialOrder);
       setShowOrderModal(true);
     }
     setShowConnectionModal(false);
-  }, [isConnected, currentOrder]);
+  }, [isConnected, currentOrder, handleSetActiveRoute]);
 
   // Start order handler
   const handleStartOrder = useCallback(() => {
     setShowOrderModal(false);
     setShowDetailsModal(true);
     setShowFloatingButton(false);
-    setDestination(MapContainer.restaurantLocation);
-  }, []);
+    handleSetActiveRoute('restaurant'); // Set initial route to restaurant
+    setShowCustomerRoute(false);
+  }, [handleSetActiveRoute]);
 
   // Close order details
   const handleCloseDetails = useCallback(() => {
     setShowDetailsModal(false);
-    setCurrentOrder(null);
+    setCurrentOrder(null); // Corrected to null
     setShowFloatingButton(true);
-    setDestination(null);
-  }, []);
+    handleSetActiveRoute(null); // Clear the active route
+    setShowCustomerRoute(false);
+  }, [handleSetActiveRoute]);
 
   // Open order details
   const handleOpenDetailsModal = useCallback(() => {
@@ -230,13 +220,13 @@ const App = () => {
   }, []);
 
   // Set route destination
-  const handleSetRouteDestination = useCallback((dest) => {
+  const handleSetRouteDestination = useCallback((dest: { latitude: number; longitude: number } | null) => {
     if (!dest) return;
-    
+
     setDestination(dest);
-    
+
     // Auto-center map to show the route
-    if (location && mapRef.current) {
+    if (location && mapRef.current && mapRef.current.fitToCoordinates) { // Added null check for fitToCoordinates
       mapRef.current.fitToCoordinates(
         [
           { latitude: location.latitude, longitude: location.longitude },
@@ -251,16 +241,25 @@ const App = () => {
   }, [location]);
 
   // Handle route info update
-  const handleRouteInfo = useCallback((info) => {
+  const handleRouteInfo = useCallback((info: { distance: number | null; duration: number | null } | null) => { // Added type annotation
     setRouteInfo(info);
     // Update order distance if needed
-    if (currentOrder && info.distance) {
-      setCurrentOrder(prev => ({
-        ...prev,
-        distance: `${info.distance.toFixed(1)} km`
-      }));
+    if (currentOrder && info && info.distance != null) { // Refined null check
+      setCurrentOrder((prev: Order | null) => { // Explicitly type prev
+        if (!prev) return null; // Return null if prev is null
+        return {
+          ...prev,
+          distance: info.distance ? `${info.distance.toFixed(1)} km` : '0.0 km'
+        };
+      });
     }
   }, [currentOrder]);
+
+  // Handle arrived at restaurant
+  const handleArrived = useCallback(() => {
+    setShowCustomerRoute(true);
+    setDestination(customerLocation); // Using the defined constant
+  }, [customerLocation]);
 
   return (
     <SafeAreaView className='flex-1 bg-white'>
@@ -269,9 +268,11 @@ const App = () => {
         region={region}
         location={location}
         errorMsg={errorMsg}
-        onSetRouteDestination={handleSetRouteDestination}
         destination={destination}
         onRouteInfo={handleRouteInfo}
+        restaurantLocation={restaurantLocation}
+        customerLocation={customerLocation}
+        activeRoute={activeRoute}
       />
       
       <Header balance={balance} formatMoney={formatMoney} />
@@ -280,7 +281,6 @@ const App = () => {
         isConnected={isConnected}
         toggleConnection={() => setShowConnectionModal(true)}
         handleCenterMap={handleCenterMap}
-        requestNewOrder={requestNewOrder}
       />
       
       <ConnectionModal
@@ -290,12 +290,12 @@ const App = () => {
         setAutoAccept={setAutoAccept}
         isConnected={isConnected}
         toggleConnection={toggleConnection}
+        setShowFavoritesModal={setShowFavoritesModal}
       />
       
       <OrderConfirmationModal
         visible={showOrderModal}
         onStart={handleStartOrder}
-        order={currentOrder}
       />
       
       <OrderDetailsModal
@@ -303,9 +303,10 @@ const App = () => {
         onClose={handleCloseDetails}
         order={currentOrder}
         setShowFloatingButton={setShowFloatingButton}
-        restaurantLocation={MapContainer.restaurantLocation}
-        customerLocation={MapContainer.customerLocation}
-        setRouteDestination={handleSetRouteDestination}
+        restaurantLocation={restaurantLocation} // Using the defined constant
+        customerLocation={customerLocation} // Using the defined constant
+        setActiveRoute={handleSetActiveRoute}
+        onArrived={() => handleSetActiveRoute('customer')} // Updated to use handleSetActiveRoute
       />
       
       {showFloatingButton && currentOrder && (

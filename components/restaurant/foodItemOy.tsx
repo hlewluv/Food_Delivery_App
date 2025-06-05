@@ -1,138 +1,129 @@
-import React, { useState } from 'react'
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native'
-import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons'
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useCartStore } from '@/apis/cart/cartStore';
 
-const FoodItemSmall = ({ item, onPress, onAddToCart, quantity = 0 }) => {
-  const [showQuantityControls, setShowQuantityControls] = useState(quantity > 0)
-
-  const handleAddPress = e => {
-    e.stopPropagation()
-    onAddToCart(1)
-    setShowQuantityControls(true)
-  }
-
-  const handleIncrement = e => {
-    e.stopPropagation()
-    onAddToCart(1)
-  }
-
-  const handleDecrement = e => {
-    e.stopPropagation()
-    if (quantity > 1) {
-      onAddToCart(-1)
-    } else {
-      onAddToCart(-1)
-      setShowQuantityControls(false)
-    }
-  }
-
-  React.useEffect(() => {
-    setShowQuantityControls(quantity > 0)
-  }, [quantity])
-
-  return (
-    <TouchableOpacity className='mr-4 w-48' onPress={onPress} activeOpacity={0.9}>
-      <View style={{ position: 'relative' }}>
-        <Image
-          source={item.image}
-          style={{ width: '100%', height: 128, borderRadius: 12 }}
-          resizeMode='cover'
-        />
-
-        {showQuantityControls ? (
-          <View style={styles.quantityContainer}>
-            <TouchableOpacity
-              onPress={handleDecrement}
-              activeOpacity={0.7}
-              style={styles.quantityButton}>
-              <Feather name='minus' size={16} color='#6b7280' />
-            </TouchableOpacity>
-
-            <View style={styles.quantityValue}>
-              <Text style={styles.quantityText}>{quantity}</Text>
-            </View>
-
-            <TouchableOpacity
-              onPress={handleIncrement}
-              activeOpacity={0.7}
-              style={styles.quantityButton}>
-              <Feather name='plus' size={16} color='#6b7280' />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity style={styles.addButton} activeOpacity={0.9} onPress={handleAddPress}>
-            <Feather name='plus' size={14} color='white' />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <Text className='mt-2 font-medium text-gray-900' numberOfLines={1}>
-        {item.name}
-      </Text>
-      <View className='flex-row justify-between items-center mt-1'>
-        <Text className='text-gray-900 font-bold'>{item.price}</Text>
-        {item.rating && (
-          <View className='flex-row items-center'>
-            <MaterialIcons name='star' size={16} color='#FFD700' style={{ marginRight: 4 }} />
-            <Text className='text-gray-700 text-sm'>{item.rating}</Text>
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
-  )
+interface FoodItemSmallProps {
+  item: {
+    id: string;
+    name: string;
+    description?: string;
+    price: string | number;
+    image?: { uri: string } | null;
+    time?: string;
+  };
+  onPress: () => void;
+  onAddToCart: (quantity: number) => void;
+  quantity: number;
 }
 
-const styles = StyleSheet.create({
-  addButton: {
-    position: 'absolute',
-    bottom: 8,
-    right: 8,
-    width: 34,
-    height: 34,
-    backgroundColor: '#00b14f',
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3
-  },
-  quantityContainer: {
-    position: 'absolute',
-    bottom: 8,
-    right: 8,
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    borderRadius: 20,
-    alignItems: 'center',
-    height: 34,
-    minWidth: 100,
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3
-  },
-  quantityButton: {
-    width: 34,
-    height: 34,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  quantityValue: {
-    minWidth: 32,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  quantityText: {
-    color: '#1f2937',
-    fontSize: 16,
-    textAlign: 'center',
-    fontWeight: '500'
-  }
-})
+const FoodItemSmall = ({ item, onPress, onAddToCart, quantity }: FoodItemSmallProps) => {
+  const [showQuantityControls, setShowQuantityControls] = useState(false);
+  const { items } = useCartStore();
+  
+  // Check if item exists in the store
+  const cartItem = items.find(cartItem => cartItem.item.id === item.id);
+  const storeQuantity = cartItem?.quantity || 0;
+  
+  // Use the store quantity if it exists and is different from prop quantity
+  const displayQuantity = storeQuantity > 0 ? storeQuantity : quantity;
 
-export default FoodItemSmall
+  useEffect(() => {
+    setShowQuantityControls(displayQuantity > 0);
+  }, [displayQuantity]);
+
+  const handleAddPress = (e: any) => {
+    e.stopPropagation();
+    onAddToCart(1);
+    setShowQuantityControls(true);
+  };
+
+  const handleIncrement = (e: any) => {
+    e.stopPropagation();
+    onAddToCart(1);
+  };
+
+  const handleDecrement = (e: any) => {
+    e.stopPropagation();
+    onAddToCart(-1);
+    if (displayQuantity <= 1) {
+      setShowQuantityControls(false);
+    }
+  };
+
+  const formatPrice = (price: string | number) => {
+    const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(numericPrice);
+  };
+
+  return (
+    <TouchableOpacity 
+      className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-full"
+      onPress={onPress}
+      activeOpacity={0.9}
+    >
+      {item.image && (
+        <Image
+          source={item.image}
+          className="w-full h-32 rounded-t-lg"
+          resizeMode="cover"
+        />
+      )}
+      
+      <View className="p-3">
+        <Text className="text-base font-bold text-gray-900 mb-1" numberOfLines={1}>
+          {item.name}
+        </Text>
+        
+        {item.description && (
+          <Text className="text-xs text-gray-500 mb-2" numberOfLines={2}>
+            {item.description}
+          </Text>
+        )}
+        
+        <View className="flex-row justify-between items-center mt-auto">
+          <Text className="text-sm font-semibold text-gray-900">
+            {formatPrice(item.price)}
+          </Text>
+          
+          {showQuantityControls ? (
+            <View className="flex-row items-center bg-white rounded-lg shadow-sm border border-gray-200">
+              <TouchableOpacity
+                onPress={handleDecrement}
+                activeOpacity={0.7}
+                className="w-8 h-8 justify-center items-center"
+              >
+                <Feather name="minus" size={14} color="#6b7280" />
+              </TouchableOpacity>
+              
+              <View className="w-6 justify-center items-center">
+                <Text className="text-gray-900 font-medium">{displayQuantity}</Text>
+              </View>
+              
+              <TouchableOpacity
+                onPress={handleIncrement}
+                activeOpacity={0.7}
+                className="w-8 h-8 justify-center items-center"
+              >
+                <Feather name="plus" size={14} color="#6b7280" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity 
+              className="w-8 h-8 bg-green-500 rounded-full justify-center items-center"
+              activeOpacity={0.9}
+              onPress={handleAddPress}
+            >
+              <Feather name="plus" size={16} color="white" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+export default FoodItemSmall;
