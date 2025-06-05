@@ -43,7 +43,7 @@ const Order = () => {
       id: transaction.id,
       customerName: transaction.customer.name,
       bikerName: transaction.biker.name,
-      bikerAvatar: 'https://via.placeholder.com/50', // Placeholder avatar
+      bikerAvatar: 'https://suckhoedoisong.qltns.mediacdn.vn/324455921873985536/2023/7/5/6-tip-cua-jennie-blackpink-de-co-lan-da-trang-min-khong-ty-vet-1688575737474377581537.jpg', // Placeholder avatar
       time: transaction.time,
       status: transaction.status === 'Hoàn tất' ? 'Lịch sử' : transaction.status === 'Đang giao' ? 'Sẵn sàng' : transaction.status,
       items: transaction.items.map((item) => ({
@@ -165,23 +165,17 @@ const Order = () => {
     <>
       <ScrollView className='bg-white flex-1 px-4'>
         {/* Header */}
-        <View className='flex-row items-center p-4 bg-white'>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className='p-2'
-            accessibilityLabel='Quay lại'>
-            <Ionicons name='arrow-back' size={24} color='#4B5563' />
-          </TouchableOpacity>
-          <Text className='flex-1 text-center text-xl font-bold text-gray-900'>
-            Đơn hàng
-          </Text>
-        </View>
+              <View className='flex-row items-center p-4 bg-white '>
+                <Text className='flex-1 text-center text-4xl font-bold text-gray-900'>
+                  Đơn hàng
+                </Text>
+              </View>
 
         {/* Tabs */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          className='bg-white px-3 py-2 border-b border-gray-200'>
+          className='bg-white px-3 py-[6] border-b border-gray-200'>
           <View className='flex-row space-x-2'>
             {tabs.map((tab) => (
               <View className='p-1' key={tab}>

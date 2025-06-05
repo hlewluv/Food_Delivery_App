@@ -91,19 +91,11 @@ const MessageScreen = ({ conversations: propConversations, tabs, defaultTab = 'B
     <View className='flex-1 bg-white'>
       {/* Header */}
       <View className='flex-row items-center p-4 bg-white'>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className='p-2'
-          accessibilityLabel='Quay lại'>
-          <Ionicons name='arrow-back' size={24} color='#4B5563' />
-        </TouchableOpacity>
-        <Text className='flex-1 text-center text-xl font-bold text-gray-900'>
-          Tin nhắn
-        </Text>
+        <Text className='flex-1 text-center text-4xl font-bold text-gray-900'>Tin nhắn</Text>
       </View>
 
       {/* Tabs */}
-      <View className='flex-row justify-around py-3 bg-white border-b border-gray-200'>
+      <View className='flex-row justify-around py-[10] bg-white border-b border-gray-200'>
         {tabs.map(tab => (
           <TouchableOpacity
             key={tab}
